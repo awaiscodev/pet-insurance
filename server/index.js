@@ -10,7 +10,7 @@ app.use(express.json());
 const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
 
 const auth = new google.auth.GoogleAuth({
-  credentials,
+  credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON),
   scopes: ["https://www.googleapis.com/auth/spreadsheets"],
 });
 
