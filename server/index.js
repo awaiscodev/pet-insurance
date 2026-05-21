@@ -1,16 +1,16 @@
 const express = require("express");
 const cors = require("cors");
-const dotenv = require("dotenv");
 const { google } = require("googleapis");
 
-dotenv.config();
-
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
+const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
+
 const auth = new google.auth.GoogleAuth({
-  keyFile: "google-sheet-key.json",
+  credentials,
   scopes: ["https://www.googleapis.com/auth/spreadsheets"],
 });
 
@@ -26,6 +26,10 @@ async function appendRow(tabName, values) {
     },
   });
 }
+
+app.get("/", (req, res) => {
+  res.send("Pet Insurance Backend Running");
+});
 
 app.post("/api/register", async (req, res) => {
   try {
@@ -116,10 +120,4 @@ app.post("/api/payment", async (req, res) => {
   }
 });
 
-app.get("/", (req, res) => {
-  res.send("Pet Insurance Backend Running");
-});
-
-app.listen(process.env.PORT, () => {
-  console.log(`Server running on port ${process.env.PORT}`);
-});
+module.exports = app;
