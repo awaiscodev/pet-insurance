@@ -120,8 +120,8 @@ function PetInfo() {
     localStorage.setItem("petInfo", JSON.stringify(form));
     navigate("/personal-info");
   } catch (error) {
-    alert("Pet info save failed. Backend check karo.");
-  }
+  alert(error.response?.data?.message || error.message);
+}
 };
 
   return (
