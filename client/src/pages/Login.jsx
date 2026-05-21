@@ -60,8 +60,8 @@ function Login() {
 
         setIsCreate(false);
       } catch (error) {
-        alert("Account save failed. Backend check karo.");
-      }
+  alert(error.response?.data?.message || error.message);
+}
 
       return;
     }
