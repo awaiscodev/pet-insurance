@@ -8,13 +8,15 @@ app.use(cors());
 app.use(express.json());
 
 function getGoogleAuth() {
-  const rawCredentials = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  const rawBase64 = process.env.GOOGLE_SERVICE_ACCOUNT_BASE64;
 
-  if (!rawCredentials) {
-    throw new Error("GOOGLE_SERVICE_ACCOUNT_JSON is missing in Vercel env");
+  if (!rawBase64) {
+    throw new Error("GOOGLE_SERVICE_ACCOUNT_BASE64 is missing");
   }
 
-  const credentials = JSON.parse(rawCredentials);
+  const credentials = JSON.parse(
+    Buffer.from(rawBase64, "base64").toString("utf8")
+  );
 
   if (credentials.private_key) {
     credentials.private_key = credentials.private_key.replace(/\\n/g, "\n");
