@@ -7,6 +7,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const getPakistanTime = () => {
+  return new Date().toLocaleString("en-US", {
+    timeZone: "Asia/Karachi",
+  });
+};
+
 function getGoogleAuth() {
   const rawBase64 = process.env.GOOGLE_SERVICE_ACCOUNT_BASE64;
 
@@ -55,7 +61,7 @@ app.post("/api/register", async (req, res) => {
     const data = req.body;
 
     await appendRow("Users", [
-      new Date().toLocaleString(),
+      getPakistanTime(),
       data.firstName,
       data.lastName,
       data.email,
@@ -74,7 +80,7 @@ app.post("/api/pet-info", async (req, res) => {
     const data = req.body;
 
     await appendRow("PetInfo", [
-      new Date().toLocaleString(),
+      getPakistanTime(),
       data.petName,
       data.petSpecies,
       data.petSex,
@@ -97,7 +103,7 @@ app.post("/api/personal-info", async (req, res) => {
     const data = req.body;
 
     await appendRow("PersonalInfo", [
-      new Date().toLocaleString(),
+      getPakistanTime(),
       data.firstName,
       data.lastName,
       data.address,
@@ -121,7 +127,7 @@ app.post("/api/payment", async (req, res) => {
     const data = req.body;
 
     await appendRow("Payments", [
-      new Date().toLocaleString(),
+      getPakistanTime(),
       data.petName,
       data.customerName,
       data.email,
