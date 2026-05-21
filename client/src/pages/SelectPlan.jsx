@@ -1,0 +1,98 @@
+import { useNavigate } from "react-router-dom";
+import { BadgeCheck, ShieldCheck, Sparkles, Stethoscope } from "lucide-react";
+import QuoteLayout from "../components/QuoteLayout";
+import "../styles/SelectPlan.css";
+
+const plans = [
+  {
+    id: "promo",
+    name: "Starter Promo Plan",
+    price: 0,
+    badge: "Limited Promotion",
+    description:
+      "A free promotional plan for new pet parents with basic digital support and accident guidance.",
+    features: [
+      "No monthly fee",
+      "Basic accident support",
+      "Digital policy record",
+      "Simple claim guidance",
+    ],
+  },
+  {
+    id: "care",
+    name: "Essential Care Plan",
+    price: 0.99,
+    badge: "Recommended",
+    description:
+      "A low-cost plan with accident, illness, and pet care support for only $0.99 per month.",
+    features: [
+      "Accident & illness support",
+      "Vet visit guidance",
+      "24/7 pet support access",
+      "Digital claim process",
+    ],
+  },
+];
+
+function SelectPlan() {
+  const navigate = useNavigate();
+
+  const choosePlan = (plan) => {
+    localStorage.setItem("selectedPlan", JSON.stringify(plan));
+    navigate("/checkout");
+  };
+
+  return (
+    <QuoteLayout activeStep={3}>
+      <main className="plan-wrap">
+        <div className="plan-heading">
+          <h1>Select Your Pet Insurance Plan</h1>
+          <p>Choose one plan to continue checkout.</p>
+        </div>
+
+        <div className="plans-grid">
+          {plans.map((plan) => (
+            <div
+              className={
+                plan.id === "care" ? "plan-card featured-plan" : "plan-card"
+              }
+              key={plan.id}
+            >
+              <div className="plan-badge">
+                <Sparkles size={16} />
+                {plan.badge}
+              </div>
+
+              <div className="plan-icon">
+                {plan.id === "promo" ? <ShieldCheck /> : <Stethoscope />}
+              </div>
+
+              <h2>{plan.name}</h2>
+              <p className="plan-desc">{plan.description}</p>
+
+              <div className="plan-price">
+                ${plan.price.toFixed(2)}
+                <span>/ month</span>
+              </div>
+
+              <ul>
+                {plan.features.map((feature) => (
+                  <li key={feature}>
+                    <BadgeCheck size={18} />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+
+              <button type="button" onClick={() => choosePlan(plan)}>
+                Select Plan
+              </button>
+            </div>
+          ))}
+        </div>
+      </main>
+    </QuoteLayout>
+  );
+}
+
+export default SelectPlan;

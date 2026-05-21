@@ -1,0 +1,55 @@
+.success-wrap {
+  min-height: calc(100vh - 190px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.success-card {
+  width: 540px;
+  background: white;
+  border-radius: 26px;
+  padding: 42px 34px;
+  text-align: center;
+  box-shadow: 0 18px 45px rgba(0, 83, 103, 0.14);
+}
+
+.success-icon {
+  width: 80px;
+  height: 80px;
+  color: #00a7a7;
+  margin-bottom: 18px;
+}
+
+.success-card h1 {
+  color: #053f5f;
+  font-size: 38px;
+  margin-bottom: 10px;
+}
+
+.success-card p {
+  color: #647980;
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.success-amount {
+  margin: 22px 0;
+  background: #eafbfb;
+  color: #053f5f;
+  padding: 16px;
+  border-radius: 16px;
+  font-weight: 800;
+}
+
+.home-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #d84b14;
+  color: white;
+  padding: 13px 24px;
+  border-radius: 30px;
+  font-weight: 900;
+}

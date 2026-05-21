@@ -1,0 +1,210 @@
+.pet-info-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 10px 20px 40px;
+}
+
+.pet-card {
+  width: 590px;
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 28px 32px;
+  box-shadow: 0 18px 45px rgba(0, 83, 103, 0.14);
+}
+
+.pet-card h1 {
+  font-size: 34px;
+  line-height: 1.1;
+  color: #053f5f;
+  margin-bottom: 8px;
+}
+
+.pet-card p {
+  color: #647980;
+  font-size: 14px;
+  margin-bottom: 18px;
+}
+
+.pet-card label {
+  display: block;
+  margin: 13px 0 6px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #053f5f;
+}
+
+.pet-card input,
+.pet-card select {
+  width: 100%;
+  height: 46px;
+  border: 1px solid #b8d7dc;
+  border-radius: 11px;
+  padding: 0 14px;
+  font-size: 15px;
+  background: #ffffff;
+  outline: none;
+}
+
+.pet-card input:focus,
+.pet-card select:focus {
+  border-color: #00a7a7;
+  box-shadow: 0 0 0 3px rgba(0, 167, 167, 0.14);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.option-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.option {
+  height: 50px;
+  border: 1px solid #b8d7dc;
+  background: #ffffff;
+  border-radius: 11px;
+  color: #053f5f;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 15px;
+}
+
+.option svg {
+  color: #00a7a7;
+}
+
+.option.active {
+  background: #00a7a7;
+  color: #ffffff;
+  border-color: #00a7a7;
+}
+
+.option.active svg {
+  color: #ffffff;
+}
+
+.breed-box {
+  border: 1px solid #b8d7dc;
+  border-radius: 11px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.breed-search-line {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  align-items: center;
+  height: 45px;
+  border-bottom: 1px solid #e5f0f2;
+}
+
+.breed-search-line svg {
+  margin-left: 14px;
+  color: #00a7a7;
+}
+
+.breed-search-line input {
+  border: none;
+  height: 43px;
+  box-shadow: none;
+  padding-left: 0;
+}
+
+.breed-box select {
+  border: none;
+  border-radius: 0;
+  height: 43px;
+}
+
+.optional-tag {
+  font-size: 11px;
+  color: #00a7a7;
+  background: #e6fbfb;
+  padding: 4px 9px;
+  border-radius: 20px;
+  margin-left: 6px;
+}
+
+.primary-quote-btn {
+  margin-top: 18px;
+  width: 100%;
+  height: 50px;
+  border: none;
+  border-radius: 30px;
+  background: #d84b14;
+  color: white;
+  font-size: 16px;
+  font-weight: 900;
+}
+.custom-breed {
+  position: relative;
+  border: 1px solid #b8d7dc;
+  border-radius: 11px;
+  background: #ffffff;
+}
+
+.breed-input-row {
+  display: grid;
+  grid-template-columns: 42px 1fr 42px;
+  align-items: center;
+  height: 46px;
+}
+
+.breed-input-row svg {
+  color: #00a7a7;
+  margin-left: 14px;
+}
+
+.breed-input-row input {
+  border: none;
+  box-shadow: none;
+  height: 44px;
+  padding-left: 0;
+}
+
+.breed-arrow {
+  border: none;
+  background: transparent;
+  height: 44px;
+}
+
+.breed-dropdown {
+  position: absolute;
+  top: 52px;
+  left: 0;
+  right: 0;
+  max-height: 230px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #b8d7dc;
+  border-radius: 12px;
+  box-shadow: 0 15px 35px rgba(0, 83, 103, 0.18);
+  z-index: 20;
+}
+
+.breed-dropdown button {
+  width: 100%;
+  border: none;
+  background: white;
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 14px;
+  color: #053f5f;
+}
+
+.breed-dropdown button:hover {
+  background: #eafbfb;
+}
+
+.breed-dropdown p {
+  padding: 14px;
+  margin: 0;
+}

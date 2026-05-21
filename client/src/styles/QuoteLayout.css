@@ -1,0 +1,67 @@
+.quote-page {
+  min-height: 100vh;
+  background: #f6fbfc;
+  color: #053f5f;
+}
+
+.quote-header {
+  max-width: 1040px;
+  height: 76px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.quote-logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #00a7a7;
+}
+
+.quote-logo h2 {
+  font-size: 34px;
+  line-height: 26px;
+  font-weight: 900;
+}
+
+.quote-logo p {
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.quote-phone {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #053f5f;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.quote-stepper {
+  max-width: 760px;
+  margin: 0 auto 22px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  text-align: center;
+}
+
+.quote-step span {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.quote-step b {
+  display: block;
+  height: 8px;
+  margin-top: 9px;
+  border-radius: 20px;
+  background: #ccebee;
+}
+
+.quote-step b.active {
+  background: #00a7a7;
+}

@@ -1,0 +1,272 @@
+.quote-page {
+  min-height: 100vh;
+  background: #fbf7f7;
+  color: #2a2532;
+}
+
+.quote-header {
+  width: 760px;
+  margin: 0 auto;
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.quote-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #5c2483;
+}
+
+.quote-logo h2 {
+  font-size: 29px;
+  line-height: 22px;
+  font-weight: 900;
+}
+
+.quote-logo p {
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.quote-phone {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #5c2483;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.stepper {
+  width: 520px;
+  margin: 0 auto 18px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  text-align: center;
+}
+
+.stepper span {
+  font-size: 12px;
+}
+
+.stepper b {
+  display: block;
+  height: 9px;
+  margin-top: 7px;
+  border-radius: 20px;
+  background: #c9b6d8;
+}
+
+.stepper div:first-child b {
+  background: #8d68b1;
+}
+
+.quote-wrapper {
+  display: flex;
+  justify-content: center;
+  padding-bottom: 45px;
+}
+
+.quote-form-card {
+  width: 430px;
+  background: white;
+  border-radius: 22px;
+  padding: 31px 27px;
+  box-shadow: 0 8px 35px rgba(57, 28, 74, 0.07);
+}
+
+.quote-form-card h1 {
+  font-size: 28px;
+  color: #2a2532;
+  margin-bottom: 8px;
+}
+
+.form-subtitle {
+  color: #6b6470;
+  font-size: 13px;
+  margin-bottom: 22px;
+}
+
+.quote-form-card label {
+  display: block;
+  margin: 16px 0 7px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #3a3340;
+}
+
+.quote-form-card input,
+.quote-form-card select {
+  width: 100%;
+  height: 41px;
+  border: 1px solid #cfc8d8;
+  border-radius: 7px;
+  padding: 0 12px;
+  font-size: 14px;
+  background: white;
+  outline: none;
+}
+
+.quote-form-card input:focus,
+.quote-form-card select:focus {
+  border-color: #6f3995;
+  box-shadow: 0 0 0 2px rgba(111, 57, 149, 0.1);
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.option-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.option {
+  height: 51px;
+  border: 1px solid #cfc8d8;
+  background: white;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #3a3340;
+}
+
+.option svg {
+  color: #70558a;
+}
+
+.option.active,
+.small-option.active {
+  background: #5c2483;
+  color: white;
+  border-color: #5c2483;
+}
+
+.option.active svg {
+  color: white;
+}
+
+.breed-combo {
+  position: relative;
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  align-items: center;
+  border: 1px solid #cfc8d8;
+  border-radius: 7px;
+  background: white;
+}
+
+.breed-combo svg {
+  margin-left: 12px;
+  color: #5c2483;
+}
+
+.breed-combo input {
+  border: none;
+  box-shadow: none;
+  height: 39px;
+  padding-left: 0;
+}
+
+.breed-combo select {
+  grid-column: 1 / 3;
+  border: none;
+  border-top: 1px solid #eee;
+  border-radius: 0 0 7px 7px;
+  height: 39px;
+}
+
+.small-link {
+  display: inline-block;
+  margin-top: 6px;
+  color: #5c2483;
+  font-size: 12px;
+  text-decoration: underline;
+  font-weight: 700;
+}
+
+.hint {
+  margin-top: 6px;
+  color: #7d7580;
+  font-size: 11px;
+}
+
+.yes-no {
+  display: flex;
+  gap: 8px;
+}
+
+.small-option {
+  width: 58px;
+  height: 42px;
+  border: 1px solid #cfc8d8;
+  background: white;
+  border-radius: 7px;
+  font-weight: 700;
+}
+
+.select-btn {
+  margin-top: 25px;
+  background: #ffbd44;
+  color: #2a2532;
+  border: none;
+  padding: 13px 22px;
+  border-radius: 30px;
+  font-weight: 900;
+}
+
+.terms {
+  margin-top: 18px;
+  color: #6c6570;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.quote-footer {
+  text-align: center;
+  padding: 25px 0 40px;
+  color: #6c6570;
+  font-size: 12px;
+}
+
+.bottom-logo {
+  justify-content: center;
+  margin-bottom: 12px;
+  opacity: 0.8;
+}
+
+@media (max-width: 700px) {
+  .quote-header,
+  .stepper {
+    width: 92%;
+  }
+
+  .quote-header {
+    height: auto;
+    padding: 22px 0;
+  }
+
+  .quote-phone {
+    font-size: 13px;
+  }
+
+  .quote-form-card {
+    width: 92%;
+  }
+
+  .two-col {
+    grid-template-columns: 1fr;
+  }
+}
