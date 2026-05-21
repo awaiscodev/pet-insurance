@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import "../styles/Login.css";
+import api from "../api";
 
 function Login() {
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ function Login() {
     setForm({ ...form, [name]: value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (isCreate) {
@@ -39,18 +40,29 @@ function Login() {
         return;
       }
 
-      localStorage.setItem(
-        "userAccount",
-        JSON.stringify({
+      try {
+        await api.post("/register", {
           firstName: form.firstName,
           lastName: form.lastName,
           email: form.email,
           password: form.password,
-        })
-      );
+        });
 
-      alert("Account created successfully. Please login now.");
-      setIsCreate(false);
+        localStorage.setItem(
+          "userAccount",
+          JSON.stringify({
+            firstName: form.firstName,
+            lastName: form.lastName,
+            email: form.email,
+            password: form.password,
+          })
+        );
+
+        setIsCreate(false);
+      } catch (error) {
+        alert("Account save failed. Backend check karo.");
+      }
+
       return;
     }
 
