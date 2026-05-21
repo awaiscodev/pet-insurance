@@ -7,16 +7,33 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
+function getGoogleAuth() {
+  const rawCredentials = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
 
-const auth = new google.auth.GoogleAuth({
-  credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON),
-  scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-});
+  if (!rawCredentials) {
+    throw new Error("GOOGLE_SERVICE_ACCOUNT_JSON is missing in Vercel env");
+  }
 
-const sheets = google.sheets({ version: "v4", auth });
+  const credentials = JSON.parse(rawCredentials);
+
+  if (credentials.private_key) {
+    credentials.private_key = credentials.private_key.replace(/\\n/g, "\n");
+  }
+
+  return new google.auth.GoogleAuth({
+    credentials,
+    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+  });
+}
 
 async function appendRow(tabName, values) {
+  if (!process.env.SHEET_ID) {
+    throw new Error("SHEET_ID is missing in Vercel env");
+  }
+
+  const auth = getGoogleAuth();
+  const sheets = google.sheets({ version: "v4", auth });
+
   await sheets.spreadsheets.values.append({
     spreadsheetId: process.env.SHEET_ID,
     range: `${tabName}!A1`,
