@@ -130,3 +130,26 @@
   border-color: #00a7a7;
   box-shadow: 0 0 0 3px rgba(0, 167, 167, 0.14);
 }
+.personal-card input,
+.personal-card select,
+.personal-card input[type="date"] {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  opacity: 1 !important;
+}
+
+.personal-card input::placeholder {
+  color: #9ca3af !important;
+  -webkit-text-fill-color: #9ca3af !important;
+}
+
+@media (max-width: 600px) {
+  .personal-card input,
+  .personal-card select,
+  .personal-card input[type="date"] {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    min-height: 48px;
+  }
+}

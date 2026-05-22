@@ -123,8 +123,8 @@ function PersonalInfo() {
       newErrors.ssn = "SSN must be XXX-XX-XXXX";
     }
 
-    if (form.zipCode && form.zipCode.replace(/\D/g, "").length < 6) {
-      newErrors.zipCode = "Zip code must be 6 digits";
+    if (form.zipCode && form.zipCode.replace(/\D/g, "").length < 5) {
+      newErrors.zipCode = "Zip code must be 5 digits";
     }
 
     if (form.dob) {
@@ -251,9 +251,9 @@ function PersonalInfo() {
               <input
                 className={errors.zipCode ? "input-error" : ""}
                 value={form.zipCode}
-                maxLength={6}
+                maxLength={5}
                 onChange={(e) =>
-                  updateField("zipCode", e.target.value.replace(/\D/g, "").slice(0, 6))
+                  updateField("zipCode", e.target.value.replace(/\D/g, "").slice(0, 5))
                 }
                 placeholder="Zip code"
               />

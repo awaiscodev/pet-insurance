@@ -288,3 +288,15 @@
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
+input,
+select {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+  opacity: 1 !important;
+}
+
+input::placeholder {
+  color: #9ca3af !important;
+  -webkit-text-fill-color: #9ca3af !important;
+}

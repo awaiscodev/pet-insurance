@@ -134,8 +134,8 @@ function Checkout() {
       newErrors.expiry = "Invalid expiry date";
     }
 
-    if (payment.billingZip && payment.billingZip.replace(/\D/g, "").length < 6) {
-      newErrors.billingZip = "Billing zip must be 6 digits";
+    if (payment.billingZip && payment.billingZip.replace(/\D/g, "").length < 5) {
+      newErrors.billingZip = "Billing zip must be 5 digits";
     }
 
     if (!payment.agree) {
@@ -264,11 +264,11 @@ function Checkout() {
           <input
             className={errors.billingZip ? "input-error" : ""}
             value={payment.billingZip}
-            maxLength={6}
+            maxLength={5}
             onChange={(e) =>
               updatePayment(
                 "billingZip",
-                e.target.value.replace(/\D/g, "").slice(0, 6)
+                e.target.value.replace(/\D/g, "").slice(0, 5)
               )
             }
             placeholder="Zip code"

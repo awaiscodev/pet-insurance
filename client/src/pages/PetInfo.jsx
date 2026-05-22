@@ -157,8 +157,8 @@ function PetInfo() {
       }
     });
 
-    if (form.zipCode && getDigits(form.zipCode).length < 6) {
-      newErrors.zipCode = "Zip code must be 6 digits";
+    if (form.zipCode && getDigits(form.zipCode).length < 5) {
+      newErrors.zipCode = "Zip code must be 5 digits";
     }
 
     if (form.phone && getDigits(form.phone).length < 10) {
@@ -315,9 +315,9 @@ function PetInfo() {
               <input
                 className={errors.zipCode ? "input-error" : ""}
                 value={form.zipCode}
-                maxLength={6}
+                maxLength={5}
                 onChange={(e) =>
-                  updateField("zipCode", e.target.value.replace(/\D/g, "").slice(0, 6))
+                  updateField("zipCode", e.target.value.replace(/\D/g, "").slice(0, 5))
                 }
                 placeholder="Enter zip code"
               />
