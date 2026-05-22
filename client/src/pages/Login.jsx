@@ -60,8 +60,8 @@ function Login() {
 
         setIsCreate(false);
       } catch (error) {
-  alert(error.response?.data?.message || error.message);
-}
+        alert(error.response?.data?.message || error.message);
+      }
 
       return;
     }

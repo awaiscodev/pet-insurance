@@ -18,17 +18,20 @@
   align-items: center;
   gap: 9px;
   color: #00a7a7;
+  text-decoration: none;
 }
 
 .quote-logo h2 {
   font-size: 34px;
   line-height: 26px;
   font-weight: 900;
+  margin: 0;
 }
 
 .quote-logo p {
   font-size: 11px;
   font-weight: 800;
+  margin: 0;
 }
 
 .quote-phone {
@@ -38,6 +41,7 @@
   color: #053f5f;
   font-size: 22px;
   font-weight: 900;
+  text-decoration: none;
 }
 
 .quote-stepper {
@@ -64,4 +68,47 @@
 
 .quote-step b.active {
   background: #00a7a7;
+}
+
+@media (max-width: 760px) {
+  .quote-header {
+    height: auto;
+    padding: 14px 16px 8px;
+    gap: 8px;
+  }
+
+  .quote-logo h2 {
+    font-size: 26px;
+    line-height: 22px;
+  }
+
+  .quote-logo p {
+    font-size: 10px;
+  }
+
+  .quote-phone {
+    font-size: 16px;
+    line-height: 1.2;
+  }
+
+  .quote-stepper {
+    width: calc(100% - 24px);
+    margin: 6px auto 18px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .quote-step span {
+    font-size: 11px;
+    line-height: 1.1;
+    min-height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .quote-step b {
+    height: 6px;
+    margin-top: 6px;
+  }
 }

@@ -13,10 +13,10 @@ function Checkout() {
   const [selectedPlan, setSelectedPlan] = useState(null);
 
   const [payment, setPayment] = useState({
+    cardName: "",
     cardNumber: "",
     expiry: "",
     cvc: "",
-    cardName: "",
     billingZip: "",
     agree: false,
   });
@@ -34,6 +34,20 @@ function Checkout() {
       setPayment((old) => ({ ...old, billingZip: person.zipCode }));
     }
   }, []);
+
+  const formatCardNumber = (value) => {
+    return value
+      .replace(/\D/g, "")
+      .slice(0, 16)
+      .replace(/(.{4})/g, "$1 ")
+      .trim();
+  };
+
+  const formatExpiry = (value) => {
+    const digits = value.replace(/\D/g, "").slice(0, 4);
+    if (digits.length <= 2) return digits;
+    return `${digits.slice(0, 2)} / ${digits.slice(2)}`;
+  };
 
   const updatePayment = (name, value) => {
     setPayment({ ...payment, [name]: value });
@@ -53,7 +67,7 @@ function Checkout() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const required = ["cardNumber", "expiry", "cvc", "cardName", "billingZip"];
+    const required = ["cardName", "cardNumber", "expiry", "cvc", "billingZip"];
     const empty = required.find((item) => !payment[item]);
 
     if (empty || !payment.agree) {
@@ -97,20 +111,29 @@ function Checkout() {
 
           <div className="secure-box">
             <Lock size={18} />
-            Secure checkout powered by encrypted payment form.
+            <span>Secure checkout powered by encrypted payment form.</span>
           </div>
 
           <h2>Payment Information</h2>
 
           <div className="card-only">
-            <CreditCard />
+            <CreditCard size={22} />
             <span>Card Payment</span>
           </div>
+
+          <label>Name on Card*</label>
+          <input
+            value={payment.cardName}
+            onChange={(e) => updatePayment("cardName", e.target.value)}
+            placeholder="Card holder name"
+          />
 
           <label>Card Number*</label>
           <input
             value={payment.cardNumber}
-            onChange={(e) => updatePayment("cardNumber", e.target.value)}
+            onChange={(e) =>
+              updatePayment("cardNumber", formatCardNumber(e.target.value))
+            }
             placeholder="1234 1234 1234 1234"
           />
 
@@ -119,7 +142,7 @@ function Checkout() {
               <label>Expiry Date*</label>
               <input
                 value={payment.expiry}
-                onChange={(e) => updatePayment("expiry", e.target.value)}
+                onChange={(e) => updatePayment("expiry", formatExpiry(e.target.value))}
                 placeholder="MM / YY"
               />
             </div>
@@ -128,31 +151,27 @@ function Checkout() {
               <label>Security Code*</label>
               <input
                 value={payment.cvc}
-                onChange={(e) => updatePayment("cvc", e.target.value)}
+                maxLength={4}
+                onChange={(e) =>
+                  updatePayment("cvc", e.target.value.replace(/\D/g, "").slice(0, 4))
+                }
                 placeholder="CVC"
               />
             </div>
           </div>
 
-          <div className="payment-grid">
-            <div>
-              <label>Name on Card*</label>
-              <input
-                value={payment.cardName}
-                onChange={(e) => updatePayment("cardName", e.target.value)}
-                placeholder="Card holder name"
-              />
-            </div>
-
-            <div>
-              <label>Billing Zip*</label>
-              <input
-                value={payment.billingZip}
-                onChange={(e) => updatePayment("billingZip", e.target.value)}
-                placeholder="Zip code"
-              />
-            </div>
-          </div>
+          <label>Billing Zip*</label>
+          <input
+            value={payment.billingZip}
+            maxLength={6}
+            onChange={(e) =>
+              updatePayment(
+                "billingZip",
+                e.target.value.replace(/\D/g, "").slice(0, 6)
+              )
+            }
+            placeholder="Zip code"
+          />
 
           <label className="check-row">
             <input
@@ -160,7 +179,7 @@ function Checkout() {
               checked={payment.agree}
               onChange={(e) => updatePayment("agree", e.target.checked)}
             />
-            I agree to the terms and policy conditions.
+            <span>I agree to the terms and policy conditions.</span>
           </label>
 
           <button className="pay-btn" type="submit">
@@ -178,11 +197,7 @@ function Checkout() {
             </span>
           </div>
 
-          <div
-            className={
-              isPromo ? "summary-plan promo-summary" : "summary-plan paid-summary"
-            }
-          >
+          <div className={isPromo ? "summary-plan promo-summary" : "summary-plan paid-summary"}>
             <h3>{selectedPlan.name}</h3>
             <p>{selectedPlan.description}</p>
           </div>

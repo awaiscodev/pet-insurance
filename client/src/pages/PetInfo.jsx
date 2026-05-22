@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Cat, Dog, Mars, Venus, Search, ChevronDown } from "lucide-react";
 import QuoteLayout from "../components/QuoteLayout";
 import "../styles/PetInfo.css";
@@ -23,36 +23,21 @@ const petAges = [
   "13+ years",
 ];
 
-const breeds = [
+const dogBreeds = [
   "Mixed Breed - Toy (< 10 lbs)",
   "Mixed Breed - Small (11-30 lbs)",
   "Mixed Breed - Medium (31-50 lbs)",
   "Mixed Breed - Large (51-90 lbs)",
   "Mixed Breed - Giant (> 90 lbs)",
-  "Affenpinscher",
-  "Afghan Hound",
-  "Airedale Terrier",
-  "Akita",
-  "American Bulldog",
-  "American Bully",
-  "Australian Shepherd",
   "Beagle",
-  "Bernedoodle",
-  "Border Collie",
   "Boxer",
   "Bulldog",
-  "Cane Corso",
-  "Cavapoo",
   "Chihuahua",
-  "Cocker Spaniel",
   "Dachshund",
-  "Doberman Pinscher",
   "French Bulldog",
   "German Shepherd Dog",
   "Golden Retriever",
-  "Goldendoodle",
   "Labrador Retriever",
-  "Maltipoo",
   "Pomeranian",
   "Poodle - Standard",
   "Pug",
@@ -62,8 +47,24 @@ const breeds = [
   "Other Dog",
 ];
 
+const catBreeds = [
+  "Domestic Shorthair",
+  "Domestic Longhair",
+  "American Shorthair",
+  "British Shorthair",
+  "Maine Coon",
+  "Persian",
+  "Ragdoll",
+  "Russian Blue",
+  "Siamese",
+  "Sphynx",
+  "Bengal",
+  "Other Cat",
+];
+
 function PetInfo() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [form, setForm] = useState({
     petName: "",
@@ -79,14 +80,49 @@ function PetInfo() {
   const [breedSearch, setBreedSearch] = useState("");
   const [showBreeds, setShowBreeds] = useState(false);
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const pet = params.get("pet");
+
+    if (pet === "Dog" || pet === "Cat") {
+      setForm((prev) => ({
+        ...prev,
+        petSpecies: pet,
+        breed: "",
+      }));
+      setBreedSearch("");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [location.search]);
+
+  const breeds = form.petSpecies === "Cat" ? catBreeds : dogBreeds;
+
   const filteredBreeds = useMemo(() => {
     return breeds.filter((breed) =>
       breed.toLowerCase().includes(breedSearch.toLowerCase())
     );
-  }, [breedSearch]);
+  }, [breedSearch, breeds]);
 
   const updateField = (name, value) => {
     setForm({ ...form, [name]: value });
+  };
+
+  const updateSpecies = (species) => {
+    setForm({
+      ...form,
+      petSpecies: species,
+      breed: "",
+    });
+    setBreedSearch("");
+  };
+
+  const formatPhone = (value) => {
+    const digits = value.replace(/\D/g, "").slice(0, 10);
+
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
   };
 
   const selectBreed = (breed) => {
@@ -96,33 +132,33 @@ function PetInfo() {
   };
 
   const handleNext = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const required = [
-    "petName",
-    "petSpecies",
-    "petSex",
-    "breed",
-    "age",
-    "zipCode",
-    "email",
-  ];
+    const required = [
+      "petName",
+      "petSpecies",
+      "petSex",
+      "breed",
+      "age",
+      "zipCode",
+      "email",
+    ];
 
-  const empty = required.find((item) => !form[item]);
+    const empty = required.find((item) => !form[item]);
 
-  if (empty) {
-    alert("Please complete all required fields before continuing.");
-    return;
-  }
+    if (empty) {
+      alert("Please complete all required fields before continuing.");
+      return;
+    }
 
-  try {
-    await api.post("/pet-info", form);
-    localStorage.setItem("petInfo", JSON.stringify(form));
-    navigate("/personal-info");
-  } catch (error) {
-  alert(error.response?.data?.message || error.message);
-}
-};
+    try {
+      await api.post("/pet-info", form);
+      localStorage.setItem("petInfo", JSON.stringify(form));
+      navigate("/personal-info");
+    } catch (error) {
+      alert(error.response?.data?.message || error.message);
+    }
+  };
 
   return (
     <QuoteLayout activeStep={1}>
@@ -145,14 +181,15 @@ function PetInfo() {
                 <button
                   type="button"
                   className={form.petSpecies === "Dog" ? "option active" : "option"}
-                  onClick={() => updateField("petSpecies", "Dog")}
+                  onClick={() => updateSpecies("Dog")}
                 >
                   <Dog size={22} /> Dog
                 </button>
+
                 <button
                   type="button"
                   className={form.petSpecies === "Cat" ? "option active" : "option"}
-                  onClick={() => updateField("petSpecies", "Cat")}
+                  onClick={() => updateSpecies("Cat")}
                 >
                   <Cat size={22} /> Cat
                 </button>
@@ -169,6 +206,7 @@ function PetInfo() {
                 >
                   <Mars size={22} /> Male
                 </button>
+
                 <button
                   type="button"
                   className={form.petSex === "Female" ? "option active" : "option"}
@@ -184,6 +222,7 @@ function PetInfo() {
           <div className="custom-breed">
             <div className="breed-input-row">
               <Search size={18} />
+
               <input
                 value={breedSearch}
                 onFocus={() => setShowBreeds(true)}
@@ -194,6 +233,7 @@ function PetInfo() {
                 }}
                 placeholder="Search or select breed"
               />
+
               <button
                 type="button"
                 onClick={() => setShowBreeds(!showBreeds)}
@@ -240,7 +280,10 @@ function PetInfo() {
               <label>Zip Code*</label>
               <input
                 value={form.zipCode}
-                onChange={(e) => updateField("zipCode", e.target.value)}
+                maxLength={6}
+                onChange={(e) =>
+                  updateField("zipCode", e.target.value.replace(/\D/g, "").slice(0, 6))
+                }
                 placeholder="Enter zip code"
               />
             </div>
@@ -259,8 +302,8 @@ function PetInfo() {
           </label>
           <input
             value={form.phone}
-            onChange={(e) => updateField("phone", e.target.value)}
-            placeholder="Enter phone number"
+            onChange={(e) => updateField("phone", formatPhone(e.target.value))}
+            placeholder="(123) 456-7890"
           />
 
           <button className="primary-quote-btn" type="submit">
