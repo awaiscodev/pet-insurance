@@ -47,8 +47,8 @@ function Landing() {
 
         <div className="hero-image-card">
           <img
-            src="https://images.unsplash.com/photo-1601758063541-d2f50b4aafb2?auto=format&fit=crop&w=700&q=80"
-            alt="pet owner with dog"
+            src="https://i.pinimg.com/736x/cd/80/64/cd8064eca80d453aabeeebb5ca4ddfbd.jpg"
+            alt="dog and cat"
           />
         </div>
       </section>

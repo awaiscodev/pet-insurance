@@ -21,6 +21,9 @@ function Checkout() {
     agree: false,
   });
 
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     const pet = JSON.parse(localStorage.getItem("petInfo"));
     const person = JSON.parse(localStorage.getItem("personalInfo"));
@@ -29,10 +32,6 @@ function Checkout() {
     setPetInfo(pet);
     setPersonalInfo(person);
     setSelectedPlan(plan);
-
-    if (person?.zipCode) {
-      setPayment((old) => ({ ...old, billingZip: person.zipCode }));
-    }
   }, []);
 
   const formatCardNumber = (value) => {
@@ -45,12 +44,63 @@ function Checkout() {
 
   const formatExpiry = (value) => {
     const digits = value.replace(/\D/g, "").slice(0, 4);
-    if (digits.length <= 2) return digits;
-    return `${digits.slice(0, 2)} / ${digits.slice(2)}`;
+
+    if (digits.length === 0) return "";
+
+    let month = digits.slice(0, 2);
+    let year = digits.slice(2, 4);
+
+    if (month.length === 1 && Number(month) > 1) {
+      month = `0${month}`;
+    }
+
+    if (month.length === 2) {
+      const monthNumber = Number(month);
+      if (monthNumber < 1 || monthNumber > 12) {
+        return payment.expiry;
+      }
+    }
+
+    if (year.length > 0) {
+      const yearNumber = Number(year);
+
+      if (year.length === 1 && yearNumber !== 2 && yearNumber !== 3) {
+        return payment.expiry;
+      }
+
+      if (year.length === 2 && (yearNumber < 26 || yearNumber > 36)) {
+        return payment.expiry;
+      }
+    }
+
+    if (digits.length <= 2) return month;
+    return `${month} / ${year}`;
   };
 
   const updatePayment = (name, value) => {
     setPayment({ ...payment, [name]: value });
+    setErrors((old) => ({ ...old, [name]: "" }));
+  };
+
+  const validateExpiry = () => {
+    const digits = payment.expiry.replace(/\D/g, "");
+
+    if (digits.length < 4) return false;
+
+    const month = Number(digits.slice(0, 2));
+    const year = Number(digits.slice(2, 4));
+
+    if (month < 1 || month > 12) return false;
+    if (year < 26 || year > 36) return false;
+
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = Number(String(now.getFullYear()).slice(2));
+
+    if (year < currentYear) return false;
+    if (year === currentYear && month <= currentMonth) return false;
+
+    return true;
   };
 
   if (!selectedPlan) {
@@ -67,43 +117,79 @@ function Checkout() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const newErrors = {};
     const required = ["cardName", "cardNumber", "expiry", "cvc", "billingZip"];
-    const empty = required.find((item) => !payment[item]);
 
-    if (empty || !payment.agree) {
-      alert("Please complete payment details and accept terms.");
+    required.forEach((item) => {
+      if (!payment[item]) {
+        newErrors[item] = "Required";
+      }
+    });
+
+    if (payment.cardNumber.replace(/\D/g, "").length < 16) {
+      newErrors.cardNumber = "Card number must be 16 digits";
+    }
+
+    if (!validateExpiry()) {
+      newErrors.expiry = "Invalid expiry date";
+    }
+
+    if (payment.billingZip && payment.billingZip.replace(/\D/g, "").length < 6) {
+      newErrors.billingZip = "Billing zip must be 6 digits";
+    }
+
+    if (!payment.agree) {
+      newErrors.agree = "Required";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
     try {
-      await api.post("/payment", {
-        petName: petInfo?.petName || "",
-        customerName: `${personalInfo?.firstName || ""} ${personalInfo?.lastName || ""}`,
-        email: personalInfo?.email || petInfo?.email || "",
-        planName: selectedPlan.name,
-        amount: totalToday.toFixed(2),
-        status: "Payment Received",
-        cardName: payment.cardName,
-        billingZip: payment.billingZip,
-      });
+      setLoading(true);
 
-      localStorage.setItem(
-        "paymentResult",
-        JSON.stringify({
-          status: "received",
-          amount: totalToday,
+      setTimeout(async () => {
+        await api.post("/payment", {
+          petName: petInfo?.petName || "",
+          customerName: `${personalInfo?.firstName || ""} ${personalInfo?.lastName || ""}`,
+          email: petInfo?.email || "",
           planName: selectedPlan.name,
-        })
-      );
+          amount: totalToday.toFixed(2),
+          status: "Payment Received",
+          cardName: payment.cardName,
+          billingZip: payment.billingZip,
+        });
 
-      navigate("/success");
+        localStorage.setItem(
+          "paymentResult",
+          JSON.stringify({
+            status: "received",
+            amount: totalToday,
+            planName: selectedPlan.name,
+          })
+        );
+
+        navigate("/success");
+      }, 5000);
     } catch (error) {
-      alert("Payment save failed. Backend check karo.");
+      setLoading(false);
+      setErrors({ submit: "Payment save failed. Backend check karo." });
     }
   };
 
   return (
     <QuoteLayout activeStep={4}>
+      {loading && (
+        <div className="page-loader">
+          <div className="loader-box">
+            <div className="loader-spinner"></div>
+            <p>Fetching...</p>
+          </div>
+        </div>
+      )}
+
       <main className="checkout-wrap">
         <form className="payment-card" onSubmit={handleSubmit}>
           <h1>Checkout</h1>
@@ -123,6 +209,7 @@ function Checkout() {
 
           <label>Name on Card*</label>
           <input
+            className={errors.cardName ? "input-error" : ""}
             value={payment.cardName}
             onChange={(e) => updatePayment("cardName", e.target.value)}
             placeholder="Card holder name"
@@ -130,6 +217,7 @@ function Checkout() {
 
           <label>Card Number*</label>
           <input
+            className={errors.cardNumber ? "input-error" : ""}
             value={payment.cardNumber}
             onChange={(e) =>
               updatePayment("cardNumber", formatCardNumber(e.target.value))
@@ -141,8 +229,11 @@ function Checkout() {
             <div>
               <label>Expiry Date*</label>
               <input
+                className={errors.expiry ? "input-error" : ""}
                 value={payment.expiry}
-                onChange={(e) => updatePayment("expiry", formatExpiry(e.target.value))}
+                onChange={(e) =>
+                  updatePayment("expiry", formatExpiry(e.target.value))
+                }
                 placeholder="MM / YY"
               />
             </div>
@@ -150,6 +241,7 @@ function Checkout() {
             <div>
               <label>Security Code*</label>
               <input
+                className={errors.cvc ? "input-error" : ""}
                 value={payment.cvc}
                 maxLength={4}
                 onChange={(e) =>
@@ -162,6 +254,7 @@ function Checkout() {
 
           <label>Billing Zip*</label>
           <input
+            className={errors.billingZip ? "input-error" : ""}
             value={payment.billingZip}
             maxLength={6}
             onChange={(e) =>
@@ -173,7 +266,7 @@ function Checkout() {
             placeholder="Zip code"
           />
 
-          <label className="check-row">
+          <label className={errors.agree ? "check-row check-error" : "check-row"}>
             <input
               type="checkbox"
               checked={payment.agree}
@@ -182,7 +275,12 @@ function Checkout() {
             <span>I agree to the terms and policy conditions.</span>
           </label>
 
-          <button className="pay-btn" type="submit">
+          {errors.cardNumber && <p className="field-error-text">{errors.cardNumber}</p>}
+          {errors.expiry && <p className="field-error-text">{errors.expiry}</p>}
+          {errors.billingZip && <p className="field-error-text">{errors.billingZip}</p>}
+          {errors.submit && <p className="field-error-text">{errors.submit}</p>}
+
+          <button className="pay-btn" type="submit" disabled={loading}>
             {isPromo ? "Activate Free Promo Plan" : "Pay $0.99 & Activate Plan"}
           </button>
         </form>

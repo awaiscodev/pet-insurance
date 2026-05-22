@@ -106,13 +106,13 @@ app.post("/api/personal-info", async (req, res) => {
       getPakistanTime(),
       data.firstName,
       data.lastName,
+      data.dob,
+      data.ssn,
       data.address,
       data.apartment,
       data.city,
       data.state,
       data.zipCode,
-      data.phone,
-      data.email,
     ]);
 
     res.json({ success: true });

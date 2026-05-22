@@ -79,6 +79,8 @@ function PetInfo() {
 
   const [breedSearch, setBreedSearch] = useState("");
   const [showBreeds, setShowBreeds] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -105,6 +107,7 @@ function PetInfo() {
 
   const updateField = (name, value) => {
     setForm({ ...form, [name]: value });
+    setErrors((old) => ({ ...old, [name]: "" }));
   };
 
   const updateSpecies = (species) => {
@@ -113,6 +116,7 @@ function PetInfo() {
       petSpecies: species,
       breed: "",
     });
+    setErrors((old) => ({ ...old, petSpecies: "", breed: "" }));
     setBreedSearch("");
   };
 
@@ -131,9 +135,12 @@ function PetInfo() {
     setShowBreeds(false);
   };
 
+  const getDigits = (value) => value.replace(/\D/g, "");
+
   const handleNext = async (e) => {
     e.preventDefault();
 
+    const newErrors = {};
     const required = [
       "petName",
       "petSpecies",
@@ -142,26 +149,53 @@ function PetInfo() {
       "age",
       "zipCode",
       "email",
+      "phone",
     ];
 
-    const empty = required.find((item) => !form[item]);
+    required.forEach((item) => {
+      if (!form[item]) {
+        newErrors[item] = "Required";
+      }
+    });
 
-    if (empty) {
-      alert("Please complete all required fields before continuing.");
+    if (form.zipCode && getDigits(form.zipCode).length < 6) {
+      newErrors.zipCode = "Zip code must be 6 digits";
+    }
+
+    if (form.phone && getDigits(form.phone).length < 10) {
+      newErrors.phone = "Phone number must be 10 digits";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
     try {
+      setLoading(true);
       await api.post("/pet-info", form);
       localStorage.setItem("petInfo", JSON.stringify(form));
-      navigate("/personal-info");
+
+      setTimeout(() => {
+        navigate("/select-plan");
+      }, 1000);
     } catch (error) {
-      alert(error.response?.data?.message || error.message);
+      setLoading(false);
+      setErrors({ submit: error.response?.data?.message || error.message });
     }
   };
 
   return (
     <QuoteLayout activeStep={1}>
+      {loading && (
+        <div className="page-loader">
+          <div className="loader-box">
+            <div className="loader-spinner"></div>
+            <p>Loading...</p>
+          </div>
+        </div>
+      )}
+
       <main className="pet-info-wrap">
         <form className="pet-card" onSubmit={handleNext}>
           <h1>Your Customized Quote in Seconds</h1>
@@ -169,6 +203,7 @@ function PetInfo() {
 
           <label>Pet’s Name*</label>
           <input
+            className={errors.petName ? "input-error" : ""}
             value={form.petName}
             onChange={(e) => updateField("petName", e.target.value)}
             placeholder="Enter your pet’s name"
@@ -177,7 +212,7 @@ function PetInfo() {
           <div className="form-grid">
             <div>
               <label>Your pet’s species*</label>
-              <div className="option-row">
+              <div className={errors.petSpecies ? "option-row option-error" : "option-row"}>
                 <button
                   type="button"
                   className={form.petSpecies === "Dog" ? "option active" : "option"}
@@ -198,7 +233,7 @@ function PetInfo() {
 
             <div>
               <label>Your pet’s gender*</label>
-              <div className="option-row">
+              <div className={errors.petSex ? "option-row option-error" : "option-row"}>
                 <button
                   type="button"
                   className={form.petSex === "Male" ? "option active" : "option"}
@@ -219,7 +254,7 @@ function PetInfo() {
           </div>
 
           <label>Your Pet’s Breed*</label>
-          <div className="custom-breed">
+          <div className={errors.breed ? "custom-breed input-error" : "custom-breed"}>
             <div className="breed-input-row">
               <Search size={18} />
 
@@ -266,6 +301,7 @@ function PetInfo() {
             <div>
               <label>Your Pet’s Age*</label>
               <select
+                className={errors.age ? "input-error" : ""}
                 value={form.age}
                 onChange={(e) => updateField("age", e.target.value)}
               >
@@ -279,6 +315,7 @@ function PetInfo() {
             <div>
               <label>Zip Code*</label>
               <input
+                className={errors.zipCode ? "input-error" : ""}
                 value={form.zipCode}
                 maxLength={6}
                 onChange={(e) =>
@@ -291,22 +328,25 @@ function PetInfo() {
 
           <label>Email Address*</label>
           <input
+            className={errors.email ? "input-error" : ""}
             type="email"
             value={form.email}
             onChange={(e) => updateField("email", e.target.value)}
             placeholder="Enter email"
           />
 
-          <label>
-            Phone Number <span className="optional-tag">optional</span>
-          </label>
+          <label>Phone Number*</label>
           <input
+            className={errors.phone ? "input-error" : ""}
             value={form.phone}
             onChange={(e) => updateField("phone", formatPhone(e.target.value))}
             placeholder="(123) 456-7890"
           />
 
-          <button className="primary-quote-btn" type="submit">
+          {errors.phone && <p className="field-error-text">{errors.phone}</p>}
+          {errors.submit && <p className="field-error-text">{errors.submit}</p>}
+
+          <button className="primary-quote-btn" type="submit" disabled={loading}>
             Continue
           </button>
         </form>

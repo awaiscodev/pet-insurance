@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BadgeCheck, ShieldCheck, Sparkles, Stethoscope } from "lucide-react";
 import QuoteLayout from "../components/QuoteLayout";
@@ -36,18 +37,32 @@ const plans = [
 
 function SelectPlan() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const choosePlan = (plan) => {
     localStorage.setItem("selectedPlan", JSON.stringify(plan));
-    navigate("/checkout");
+    setLoading(true);
+
+    setTimeout(() => {
+      navigate("/personal-info");
+    }, 1000);
   };
 
   return (
-    <QuoteLayout activeStep={3}>
+    <QuoteLayout activeStep={2}>
+      {loading && (
+        <div className="page-loader">
+          <div className="loader-box">
+            <div className="loader-spinner"></div>
+            <p>Loading...</p>
+          </div>
+        </div>
+      )}
+
       <main className="plan-wrap">
         <div className="plan-heading">
           <h1>Select Your Pet Insurance Plan</h1>
-          <p>Choose one plan to continue checkout.</p>
+          <p>Choose one plan to continue.</p>
         </div>
 
         <div className="plans-grid">
@@ -84,7 +99,7 @@ function SelectPlan() {
                 ))}
               </ul>
 
-              <button type="button" onClick={() => choosePlan(plan)}>
+              <button type="button" onClick={() => choosePlan(plan)} disabled={loading}>
                 Select Plan
               </button>
             </div>

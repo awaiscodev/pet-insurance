@@ -4,79 +4,191 @@ import QuoteLayout from "../components/QuoteLayout";
 import "../styles/PersonalInfo.css";
 import api from "../api";
 
+const states = [
+  "Alabama",
+  "Alaska",
+  "Arizona",
+  "Arkansas",
+  "California",
+  "Colorado",
+  "Connecticut",
+  "Delaware",
+  "Florida",
+  "Georgia",
+  "Hawaii",
+  "Idaho",
+  "Illinois",
+  "Indiana",
+  "Iowa",
+  "Kansas",
+  "Kentucky",
+  "Louisiana",
+  "Maine",
+  "Maryland",
+  "Massachusetts",
+  "Michigan",
+  "Minnesota",
+  "Mississippi",
+  "Missouri",
+  "Montana",
+  "Nebraska",
+  "Nevada",
+  "New Hampshire",
+  "New Jersey",
+  "New Mexico",
+  "New York",
+  "North Carolina",
+  "North Dakota",
+  "Ohio",
+  "Oklahoma",
+  "Oregon",
+  "Pennsylvania",
+  "Rhode Island",
+  "South Carolina",
+  "South Dakota",
+  "Tennessee",
+  "Texas",
+  "Utah",
+  "Vermont",
+  "Virginia",
+  "Washington",
+  "West Virginia",
+  "Wisconsin",
+  "Wyoming",
+];
+
 function PersonalInfo() {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
+    dob: "",
+    ssn: "",
     address: "",
     apartment: "",
     city: "",
     state: "",
     zipCode: "",
-    phone: "",
-    email: "",
   });
+
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const petInfo = JSON.parse(localStorage.getItem("petInfo"));
 
-    if (petInfo) {
+    if (petInfo?.zipCode) {
       setForm((oldForm) => ({
         ...oldForm,
-        zipCode: petInfo.zipCode || "",
-        phone: petInfo.phone || "",
-        email: petInfo.email || "",
+        zipCode: petInfo.zipCode,
       }));
     }
   }, []);
 
   const updateField = (name, value) => {
     setForm({ ...form, [name]: value });
+    setErrors((oldErrors) => ({ ...oldErrors, [name]: "" }));
+  };
+
+  const formatSSN = (value) => {
+    const digits = value.replace(/\D/g, "").slice(0, 9);
+
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 5) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+
+    return `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5)}`;
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    const required = [
+      "firstName",
+      "lastName",
+      "dob",
+      "ssn",
+      "address",
+      "city",
+      "state",
+      "zipCode",
+    ];
+
+    required.forEach((field) => {
+      if (!form[field]) {
+        newErrors[field] = "Required";
+      }
+    });
+
+    if (form.ssn && form.ssn.replace(/\D/g, "").length < 9) {
+      newErrors.ssn = "SSN must be XXX-XX-XXXX";
+    }
+
+    if (form.zipCode && form.zipCode.replace(/\D/g, "").length < 6) {
+      newErrors.zipCode = "Zip code must be 6 digits";
+    }
+
+    if (form.dob) {
+      const selectedDate = new Date(form.dob);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (selectedDate > today) {
+        newErrors.dob = "DOB cannot be future date";
+      }
+    }
+
+    return newErrors;
   };
 
   const handleNext = async (e) => {
     e.preventDefault();
 
-    const required = [
-      "firstName",
-      "lastName",
-      "address",
-      "city",
-      "state",
-      "zipCode",
-      "phone",
-      "email",
-    ];
+    const newErrors = validateForm();
 
-    const empty = required.find((item) => !form[item]);
-
-    if (empty) {
-      alert("Please complete all required fields before continuing.");
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
     try {
+      setLoading(true);
+
       await api.post("/personal-info", form);
       localStorage.setItem("personalInfo", JSON.stringify(form));
-      navigate("/select-plan");
+
+      setTimeout(() => {
+        navigate("/checkout");
+      }, 1000);
     } catch (error) {
-      alert("Personal info save failed. Backend check karo.");
+      setLoading(false);
+      setErrors({
+        submit: error.response?.data?.message || "Personal info save failed. Backend check karo.",
+      });
     }
   };
 
   return (
-    <QuoteLayout activeStep={2}>
+    <QuoteLayout activeStep={3}>
+      {loading && (
+        <div className="page-loader">
+          <div className="loader-box">
+            <div className="loader-spinner"></div>
+            <p>Loading...</p>
+          </div>
+        </div>
+      )}
+
       <main className="personal-wrap">
         <form className="personal-card" onSubmit={handleNext}>
           <h1>Your Information</h1>
-          <p>Your quote details are saved. Please complete your contact information.</p>
+          <p>Your quote details are saved. Please complete your information.</p>
 
           <div className="personal-grid">
             <div>
               <label>First Name*</label>
               <input
+                className={errors.firstName ? "input-error" : ""}
                 value={form.firstName}
                 onChange={(e) => updateField("firstName", e.target.value)}
                 placeholder="First name"
@@ -86,6 +198,7 @@ function PersonalInfo() {
             <div>
               <label>Last Name*</label>
               <input
+                className={errors.lastName ? "input-error" : ""}
                 value={form.lastName}
                 onChange={(e) => updateField("lastName", e.target.value)}
                 placeholder="Last name"
@@ -93,8 +206,33 @@ function PersonalInfo() {
             </div>
           </div>
 
+          <div className="personal-grid">
+            <div>
+              <label>DOB*</label>
+              <input
+                className={errors.dob ? "input-error" : ""}
+                type="date"
+                value={form.dob}
+                min="1900-01-01"
+                max={new Date().toISOString().split("T")[0]}
+                onChange={(e) => updateField("dob", e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label>SSN Number*</label>
+              <input
+                className={errors.ssn ? "input-error" : ""}
+                value={form.ssn}
+                onChange={(e) => updateField("ssn", formatSSN(e.target.value))}
+                placeholder="XXX-XX-XXXX"
+              />
+            </div>
+          </div>
+
           <label>Physical Address*</label>
           <input
+            className={errors.address ? "input-error" : ""}
             value={form.address}
             onChange={(e) => updateField("address", e.target.value)}
             placeholder="Street address"
@@ -113,8 +251,12 @@ function PersonalInfo() {
             <div>
               <label>Zip Code*</label>
               <input
+                className={errors.zipCode ? "input-error" : ""}
                 value={form.zipCode}
-                onChange={(e) => updateField("zipCode", e.target.value)}
+                maxLength={6}
+                onChange={(e) =>
+                  updateField("zipCode", e.target.value.replace(/\D/g, "").slice(0, 6))
+                }
                 placeholder="Zip code"
               />
             </div>
@@ -124,6 +266,7 @@ function PersonalInfo() {
             <div>
               <label>City*</label>
               <input
+                className={errors.city ? "input-error" : ""}
                 value={form.city}
                 onChange={(e) => updateField("city", e.target.value)}
                 placeholder="City"
@@ -132,37 +275,28 @@ function PersonalInfo() {
 
             <div>
               <label>State*</label>
-              <input
+              <select
+                className={errors.state ? "input-error" : ""}
                 value={form.state}
                 onChange={(e) => updateField("state", e.target.value)}
-                placeholder="State"
-              />
+              >
+                <option value="">Select state</option>
+                {states.map((stateName) => (
+                  <option key={stateName} value={stateName}>
+                    {stateName}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
-          <div className="personal-grid">
-            <div>
-              <label>Phone Number*</label>
-              <input
-                value={form.phone}
-                onChange={(e) => updateField("phone", e.target.value)}
-                placeholder="Phone number"
-              />
-            </div>
+          {errors.dob && <p className="field-error-text">{errors.dob}</p>}
+          {errors.ssn && <p className="field-error-text">{errors.ssn}</p>}
+          {errors.zipCode && <p className="field-error-text">{errors.zipCode}</p>}
+          {errors.submit && <p className="field-error-text">{errors.submit}</p>}
 
-            <div>
-              <label>Email*</label>
-              <input
-                type="email"
-                value={form.email}
-                onChange={(e) => updateField("email", e.target.value)}
-                placeholder="Email"
-              />
-            </div>
-          </div>
-
-          <button className="primary-quote-btn" type="submit">
-            Continue to Plans
+          <button className="primary-quote-btn" type="submit" disabled={loading}>
+            Continue to Checkout
           </button>
         </form>
       </main>
