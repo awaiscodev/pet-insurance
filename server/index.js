@@ -30,85 +30,63 @@ async function appendRow(tabName, values) {
   const auth = getGoogleAuth();
   const sheets = google.sheets({ version: "v4", auth });
 
-  await sheets.spreadsheets.values.append({
+  const appendResponse = await sheets.spreadsheets.values.append({
     spreadsheetId: process.env.SHEET_ID,
     range: `${tabName}!A1`,
     valueInputOption: "USER_ENTERED",
     insertDataOption: "INSERT_ROWS",
+    includeValuesInResponse: true,
     requestBody: {
       values: [values],
+    },
+  });
+
+  const updatedRange = appendResponse.data.updates.updatedRange;
+  const rowNumber = Number(updatedRange.match(/![A-Z]+(\d+):/)?.[1]);
+
+  const spreadsheet = await sheets.spreadsheets.get({
+    spreadsheetId: process.env.SHEET_ID,
+  });
+
+  const sheet = spreadsheet.data.sheets.find(
+    (s) => s.properties.title === tabName
+  );
+
+  if (!sheet || !rowNumber) return;
+
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId: process.env.SHEET_ID,
+    requestBody: {
+      requests: [
+        {
+          repeatCell: {
+            range: {
+              sheetId: sheet.properties.sheetId,
+              startRowIndex: rowNumber - 1,
+              endRowIndex: rowNumber,
+              startColumnIndex: 0,
+              endColumnIndex: values.length,
+            },
+            cell: {
+              userEnteredFormat: {
+                backgroundColor: { red: 1, green: 1, blue: 1 },
+                textFormat: {
+                  foregroundColor: { red: 0, green: 0, blue: 0 },
+                  bold: false,
+                },
+              },
+            },
+            fields:
+              "userEnteredFormat(backgroundColor,textFormat.foregroundColor,textFormat.bold)",
+          },
+        },
+      ],
     },
   });
 }
 
 app.get("/", (req, res) => {
   res.send("Pet Insurance Backend Running");
-});
-
-app.post("/api/register", async (req, res) => {
-  try {
-    const data = req.body;
-
-    await appendRow("Users", [
-      getPakistanTime(),
-      data.firstName || "",
-      data.lastName || "",
-      data.email || "",
-      data.password || "",
-    ]);
-
-    res.json({ success: true });
-  } catch (error) {
-    console.log("REGISTER ERROR:", error.message);
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-app.post("/api/pet-info", async (req, res) => {
-  try {
-    const data = req.body;
-
-    await appendRow("PetInfo", [
-      getPakistanTime(),
-      data.petName || "",
-      data.petSpecies || "",
-      data.petSex || "",
-      data.breed || "",
-      data.age || "",
-      data.zipCode || "",
-      data.email || "",
-      data.phone || "",
-    ]);
-
-    res.json({ success: true });
-  } catch (error) {
-    console.log("PET INFO ERROR:", error.message);
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-app.post("/api/personal-info", async (req, res) => {
-  try {
-    const data = req.body;
-
-    await appendRow("PersonalInfo", [
-      getPakistanTime(),
-      data.firstName || "",
-      data.lastName || "",
-      data.dob || "",
-      data.ssn || "",
-      data.address || "",
-      data.apartment || "",
-      data.city || "",
-      data.state || "",
-      data.zipCode || "",
-    ]);
-
-    res.json({ success: true });
-  } catch (error) {
-    console.log("PERSONAL INFO ERROR:", error.message);
-    res.status(500).json({ success: false, message: error.message });
-  }
 });
 
 app.post("/api/save-lead", async (req, res) => {
@@ -147,29 +125,6 @@ app.post("/api/save-lead", async (req, res) => {
     res.json({ success: true, uniqueId });
   } catch (error) {
     console.log("SAVE LEAD ERROR:", error.message);
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-app.post("/api/payment", async (req, res) => {
-  try {
-    const data = req.body;
-
-    await appendRow("Payments", [
-      getPakistanTime(),
-      data.petName || "",
-      data.customerName || "",
-      data.email || "",
-      data.planName || "",
-      data.amount || "",
-      data.status || "",
-      data.cardName || "",
-      data.billingZip || "",
-    ]);
-
-    res.json({ success: true });
-  } catch (error) {
-    console.log("PAYMENT ERROR:", error.message);
     res.status(500).json({ success: false, message: error.message });
   }
 });
