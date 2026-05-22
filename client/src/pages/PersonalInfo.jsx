@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import QuoteLayout from "../components/QuoteLayout";
 import "../styles/PersonalInfo.css";
-import api from "../api";
 
 const states = [
   "Alabama",
@@ -154,7 +153,6 @@ function PersonalInfo() {
     try {
       setLoading(true);
 
-      await api.post("/personal-info", form);
       localStorage.setItem("personalInfo", JSON.stringify(form));
 
       setTimeout(() => {

