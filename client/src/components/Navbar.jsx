@@ -1,27 +1,13 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { PawPrint, UserCircle, Menu, X } from "lucide-react";
+import { Link } from "react-router-dom";
+import { PawPrint, Menu, X } from "lucide-react";
 import "../styles/Navbar.css";
 
 function Navbar() {
-  const navigate = useNavigate();
   const [openMenu, setOpenMenu] = useState(false);
-  const [openProfile, setOpenProfile] = useState(false);
-
-  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-  const user = JSON.parse(localStorage.getItem("userAccount") || "{}");
 
   const closeMenu = () => {
     setOpenMenu(false);
-    setOpenProfile(false);
-  };
-
-  const logout = () => {
-    localStorage.removeItem("isLoggedIn");
-    setOpenProfile(false);
-    setOpenMenu(false);
-    navigate("/");
-    window.location.reload();
   };
 
   return (
@@ -95,31 +81,6 @@ function Navbar() {
         <Link className="quote-link" to="/quote" onClick={closeMenu}>
           Get a Quote
         </Link>
-
-        {isLoggedIn ? (
-          <div className="profile-wrap">
-            <button
-              type="button"
-              className="profile-box"
-              onClick={() => setOpenProfile(!openProfile)}
-            >
-              <UserCircle size={30} />
-              <span>{user?.firstName || "Profile"}</span>
-            </button>
-
-            {openProfile && (
-              <div className="profile-menu">
-                <p>{user?.firstName} {user?.lastName}</p>
-                <small>{user?.email}</small>
-                <button type="button" onClick={logout}>Sign Out</button>
-              </div>
-            )}
-          </div>
-        ) : (
-          <Link className="login-link" to="/login" onClick={closeMenu}>
-            Login
-          </Link>
-        )}
       </nav>
     </header>
   );
