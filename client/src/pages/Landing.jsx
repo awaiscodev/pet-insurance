@@ -46,10 +46,7 @@ function Landing() {
         </div>
 
         <div className="hero-image-card">
-          <img
-            src="https://i.pinimg.com/736x/cd/80/64/cd8064eca80d453aabeeebb5ca4ddfbd.jpg"
-            alt="dog and cat"
-          />
+         <img className="hero-main-image" src="/images/hero-image.webp" alt="Hero" />
         </div>
       </section>
 

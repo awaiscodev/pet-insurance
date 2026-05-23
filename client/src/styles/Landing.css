@@ -69,11 +69,15 @@
   padding-bottom: 10px;
 }
 
-.hero-image-card img {
+.hero-image-card img,
+.hero-main-image {
   width: 100%;
-  height: 310px;
-  object-fit: cover;
-  border-radius: 45px 12px 45px 12px;
+  height: auto;
+  max-height: none;
+  object-fit: contain;
+  object-position: center;
+  border-radius: 28px;
+  display: block;
 }
 
 .why-card,
@@ -451,5 +455,22 @@ footer {
 
   .video-section {
     gap: 30px;
+  }
+}
+.hero-main-image {
+  width: 100%;
+  height: auto;
+  max-height: 520px;
+  object-fit: contain;
+  object-position: center;
+  border-radius: 24px;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .hero-main-image {
+    max-height: none;
+    width: 100%;
+    height: auto;
   }
 }
