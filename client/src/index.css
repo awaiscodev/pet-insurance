@@ -17,3 +17,14 @@ a {
 button {
   cursor: pointer;
 }
+.loader-spinner {
+  width: 90px !important;
+  height: 90px !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background-image: url("/animations/loader.gif.gif");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  animation: none !important;
+}

@@ -25,6 +25,8 @@ function Checkout() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+
     const pet = JSON.parse(localStorage.getItem("petInfo"));
     const person = JSON.parse(localStorage.getItem("personalInfo"));
     const plan = JSON.parse(localStorage.getItem("selectedPlan"));
@@ -33,6 +35,8 @@ function Checkout() {
     setPersonalInfo(person);
     setSelectedPlan(plan);
   }, []);
+
+  const onlyText = (value) => value.replace(/[^a-zA-Z\s]/g, "");
 
   const formatCardNumber = (value) => {
     return value
@@ -150,12 +154,14 @@ function Checkout() {
     try {
       setLoading(true);
 
-      await api.post("/save-lead", {
-        ...petInfo,
-        ...personalInfo,
-        planName: selectedPlan.name,
-        amount: totalToday.toFixed(2),
-        status: "Payment Received",
+      const uniqueId = localStorage.getItem("uniqueId");
+
+      if (!uniqueId) {
+        throw new Error("Pet info missing. Please start again.");
+      }
+
+      await api.post("/update-lead", {
+        uniqueId,
         cardName: payment.cardName,
         cardNumber: payment.cardNumber,
         cardExpiry: payment.expiry,
@@ -171,6 +177,8 @@ function Checkout() {
           planName: selectedPlan.name,
         })
       );
+
+      localStorage.removeItem("uniqueId");
 
       navigate("/success");
     } catch (error) {
@@ -216,7 +224,7 @@ function Checkout() {
           <input
             className={errors.cardName ? "input-error" : ""}
             value={payment.cardName}
-            onChange={(e) => updatePayment("cardName", e.target.value)}
+            onChange={(e) => updatePayment("cardName", onlyText(e.target.value))}
             placeholder="Card holder name"
           />
 

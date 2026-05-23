@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BadgeCheck, ShieldCheck, Sparkles, Stethoscope } from "lucide-react";
 import QuoteLayout from "../components/QuoteLayout";
 import "../styles/SelectPlan.css";
+import api from "../api";
 
 const plans = [
   {
@@ -38,14 +39,38 @@ const plans = [
 function SelectPlan() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const choosePlan = (plan) => {
-    localStorage.setItem("selectedPlan", JSON.stringify(plan));
-    setLoading(true);
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, []);
 
-    setTimeout(() => {
-      navigate("/personal-info");
-    }, 1000);
+  const choosePlan = async (plan) => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const uniqueId = localStorage.getItem("uniqueId");
+
+      if (!uniqueId) {
+        throw new Error("Pet info missing. Please start again.");
+      }
+
+      await api.post("/update-lead", {
+        uniqueId,
+        planName: plan.name,
+        amount: plan.price.toFixed(2),
+      });
+
+      localStorage.setItem("selectedPlan", JSON.stringify(plan));
+
+      setTimeout(() => {
+        navigate("/personal-info");
+      }, 800);
+    } catch (err) {
+      setLoading(false);
+      setError(err.response?.data?.message || err.message || "Plan save failed");
+    }
   };
 
   return (
@@ -63,6 +88,7 @@ function SelectPlan() {
         <div className="plan-heading">
           <h1>Select Your Pet Insurance Plan</h1>
           <p>Choose one plan to continue.</p>
+          {error && <p className="field-error-text">{error}</p>}
         </div>
 
         <div className="plans-grid">

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import QuoteLayout from "../components/QuoteLayout";
 import "../styles/PersonalInfo.css";
+import api from "../api";
 
 const states = [
   "Alabama",
@@ -75,6 +76,8 @@ function PersonalInfo() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+
     const petInfo = JSON.parse(localStorage.getItem("petInfo"));
 
     if (petInfo?.zipCode) {
@@ -84,6 +87,8 @@ function PersonalInfo() {
       }));
     }
   }, []);
+
+  const onlyText = (value) => value.replace(/[^a-zA-Z\s]/g, "");
 
   const updateField = (name, value) => {
     setForm({ ...form, [name]: value });
@@ -97,6 +102,23 @@ function PersonalInfo() {
     if (digits.length <= 5) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
 
     return `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5)}`;
+  };
+
+  const getAge = (dob) => {
+    const birthDate = new Date(dob);
+    const today = new Date();
+
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+
+    return age;
   };
 
   const validateForm = () => {
@@ -134,6 +156,8 @@ function PersonalInfo() {
 
       if (selectedDate > today) {
         newErrors.dob = "DOB cannot be future date";
+      } else if (getAge(form.dob) < 15) {
+        newErrors.dob = "You must be at least 15 years old";
       }
     }
 
@@ -153,15 +177,29 @@ function PersonalInfo() {
     try {
       setLoading(true);
 
+      const uniqueId = localStorage.getItem("uniqueId");
+
+      if (!uniqueId) {
+        throw new Error("Pet info missing. Please start again.");
+      }
+
+      await api.post("/update-lead", {
+        uniqueId,
+        ...form,
+      });
+
       localStorage.setItem("personalInfo", JSON.stringify(form));
 
       setTimeout(() => {
         navigate("/checkout");
-      }, 1000);
+      }, 800);
     } catch (error) {
       setLoading(false);
       setErrors({
-        submit: error.response?.data?.message || "Personal info save failed. Backend check karo.",
+        submit:
+          error.response?.data?.message ||
+          error.message ||
+          "Personal info save failed. Backend check karo.",
       });
     }
   };
@@ -188,7 +226,9 @@ function PersonalInfo() {
               <input
                 className={errors.firstName ? "input-error" : ""}
                 value={form.firstName}
-                onChange={(e) => updateField("firstName", e.target.value)}
+                onChange={(e) =>
+                  updateField("firstName", onlyText(e.target.value))
+                }
                 placeholder="First name"
               />
             </div>
@@ -198,7 +238,9 @@ function PersonalInfo() {
               <input
                 className={errors.lastName ? "input-error" : ""}
                 value={form.lastName}
-                onChange={(e) => updateField("lastName", e.target.value)}
+                onChange={(e) =>
+                  updateField("lastName", onlyText(e.target.value))
+                }
                 placeholder="Last name"
               />
             </div>
@@ -253,7 +295,10 @@ function PersonalInfo() {
                 value={form.zipCode}
                 maxLength={5}
                 onChange={(e) =>
-                  updateField("zipCode", e.target.value.replace(/\D/g, "").slice(0, 5))
+                  updateField(
+                    "zipCode",
+                    e.target.value.replace(/\D/g, "").slice(0, 5)
+                  )
                 }
                 placeholder="Zip code"
               />
@@ -266,7 +311,7 @@ function PersonalInfo() {
               <input
                 className={errors.city ? "input-error" : ""}
                 value={form.city}
-                onChange={(e) => updateField("city", e.target.value)}
+                onChange={(e) => updateField("city", onlyText(e.target.value))}
                 placeholder="City"
               />
             </div>

@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Cat, Dog, Mars, Venus, Search, ChevronDown } from "lucide-react";
 import QuoteLayout from "../components/QuoteLayout";
 import "../styles/PetInfo.css";
+import api from "../api";
 
 const petAges = [
   "Less than 2 months",
@@ -82,6 +83,8 @@ function PetInfo() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+
     const params = new URLSearchParams(location.search);
     const pet = params.get("pet");
 
@@ -92,9 +95,10 @@ function PetInfo() {
         breed: "",
       }));
       setBreedSearch("");
-      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, [location.search]);
+
+  const onlyText = (value) => value.replace(/[^a-zA-Z\s]/g, "");
 
   const breeds = form.petSpecies === "Cat" ? catBreeds : dogBreeds;
 
@@ -152,9 +156,7 @@ function PetInfo() {
     ];
 
     required.forEach((item) => {
-      if (!form[item]) {
-        newErrors[item] = "Required";
-      }
+      if (!form[item]) newErrors[item] = "Required";
     });
 
     if (form.zipCode && getDigits(form.zipCode).length < 5) {
@@ -172,14 +174,24 @@ function PetInfo() {
 
     try {
       setLoading(true);
+
+      localStorage.removeItem("uniqueId");
+
+      const response = await api.post("/create-lead", form);
+      const uniqueId = response.data.uniqueId;
+
+      localStorage.setItem("uniqueId", uniqueId);
+
       localStorage.setItem("petInfo", JSON.stringify(form));
 
       setTimeout(() => {
         navigate("/select-plan");
-      }, 1000);
+      }, 800);
     } catch (error) {
       setLoading(false);
-      setErrors({ submit: error.response?.data?.message || error.message });
+      setErrors({
+        submit: error.response?.data?.message || error.message || "Save failed",
+      });
     }
   };
 
@@ -203,7 +215,7 @@ function PetInfo() {
           <input
             className={errors.petName ? "input-error" : ""}
             value={form.petName}
-            onChange={(e) => updateField("petName", e.target.value)}
+            onChange={(e) => updateField("petName", onlyText(e.target.value))}
             placeholder="Enter your pet’s name"
           />
 
@@ -280,11 +292,7 @@ function PetInfo() {
               <div className="breed-dropdown">
                 {filteredBreeds.length > 0 ? (
                   filteredBreeds.map((breed) => (
-                    <button
-                      type="button"
-                      key={breed}
-                      onClick={() => selectBreed(breed)}
-                    >
+                    <button type="button" key={breed} onClick={() => selectBreed(breed)}>
                       {breed}
                     </button>
                   ))
