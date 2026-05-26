@@ -1,4 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
+
 import Landing from "./pages/Landing";
 import PetInfo from "./pages/PetInfo";
 import PersonalInfo from "./pages/PersonalInfo";
@@ -6,7 +8,13 @@ import SelectPlan from "./pages/SelectPlan";
 import Checkout from "./pages/Checkout";
 import Success from "./pages/Success";
 
+import { trackVisitorOnce } from "./utils/visitorTracker";
+
 function App() {
+  useEffect(() => {
+    trackVisitorOnce();
+  }, []);
+
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
