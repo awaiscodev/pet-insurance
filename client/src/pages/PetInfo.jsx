@@ -4,6 +4,7 @@ import { Cat, Dog, Mars, Venus, Search, ChevronDown } from "lucide-react";
 import QuoteLayout from "../components/QuoteLayout";
 import "../styles/PetInfo.css";
 import api from "../api";
+import { getVisitorDataForLead } from "../utils/visitorTracker";
 
 const petAges = [
   "Less than 2 months",
@@ -177,7 +178,12 @@ function PetInfo() {
 
       localStorage.removeItem("uniqueId");
 
-      const response = await api.post("/create-lead", form);
+      const visitorData = await getVisitorDataForLead();
+
+      const response = await api.post("/create-lead", {
+        ...form,
+        visitorData,
+      });
       const uniqueId = response.data.uniqueId;
 
       localStorage.setItem("uniqueId", uniqueId);

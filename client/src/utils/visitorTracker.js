@@ -47,14 +47,36 @@ export const collectVisitorData = () => ({
 });
 
 export const trackVisitorOnce = async () => {
-  trackingPromise = api.post("/track-visitor", collectVisitorData()).then((res) => {
-    localStorage.setItem("visitorData", JSON.stringify(res.data.visitorData));
-    return res.data.visitorData;
-  });
+  if (trackingPromise) return trackingPromise;
+
+  trackingPromise = api
+    .post("/track-visitor", collectVisitorData())
+    .then((res) => {
+      sessionStorage.setItem(
+        "visitorData",
+        JSON.stringify(res.data.visitorData)
+      );
+
+      return res.data.visitorData;
+    })
+    .catch((error) => {
+      trackingPromise = null;
+      throw error;
+    });
 
   return trackingPromise;
 };
 
 export const getVisitorDataForLead = async () => {
+  const savedVisitor = sessionStorage.getItem("visitorData");
+
+  if (savedVisitor) {
+    try {
+      return JSON.parse(savedVisitor);
+    } catch {
+      sessionStorage.removeItem("visitorData");
+    }
+  }
+
   return await trackVisitorOnce();
 };
