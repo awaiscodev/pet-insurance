@@ -47,8 +47,6 @@ export const collectVisitorData = () => ({
 });
 
 export const trackVisitorOnce = async () => {
-  if (trackingPromise) return trackingPromise;
-
   trackingPromise = api.post("/track-visitor", collectVisitorData()).then((res) => {
     localStorage.setItem("visitorData", JSON.stringify(res.data.visitorData));
     return res.data.visitorData;
@@ -58,11 +56,5 @@ export const trackVisitorOnce = async () => {
 };
 
 export const getVisitorDataForLead = async () => {
-  const saved = localStorage.getItem("visitorData");
-
-  if (saved) {
-    return JSON.parse(saved);
-  }
-
   return await trackVisitorOnce();
 };
