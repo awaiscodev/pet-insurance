@@ -26,12 +26,29 @@ const getPakistanTime = () =>
 
 function getClientIp(req) {
   const forwarded = req.headers["x-forwarded-for"];
-  if (forwarded) return forwarded.split(",")[0].trim();
 
-  return (req.headers["x-real-ip"] || req.socket?.remoteAddress || "").replace(
-    "::ffff:",
-    ""
-  );
+  if (forwarded) {
+    const ips = forwarded
+      .split(",")
+      .map((ip) => ip.trim())
+      .filter(Boolean);
+
+    const publicIp =
+      ips.find(
+        (ip) =>
+          !ip.startsWith("10.") &&
+          !ip.startsWith("172.") &&
+          !ip.startsWith("192.168.") &&
+          ip !== "::1" &&
+          ip !== "127.0.0.1"
+      ) || ips[0];
+
+    return publicIp.replace("::ffff:", "");
+  }
+
+  return (req.headers["x-real-ip"] || req.socket?.remoteAddress || "")
+    .replace("::ffff:", "")
+    .replace("::1", "");
 }
 
 function getGoogleAuth() {
@@ -279,18 +296,35 @@ async function getNextPetId() {
 
 async function getIpInfo(ip) {
   try {
-    if (!process.env.IPINFO_TOKEN) return {};
+    if (!process.env.IPINFO_TOKEN) {
+      console.log("IPINFO_TOKEN missing");
+      return {};
+    }
 
-    const cleanIp = ip && ip !== "::1" ? ip : "";
+    const cleanIp =
+      ip && ip !== "::1" && ip !== "127.0.0.1" && !ip.startsWith("::ffff:")
+        ? ip
+        : "";
+
     const url = cleanIp
-      ? `https://ipinfo.io/${cleanIp}?token=${process.env.IPINFO_TOKEN}`
+      ? `https://ipinfo.io/${cleanIp}/json?token=${process.env.IPINFO_TOKEN}`
       : `https://ipinfo.io/json?token=${process.env.IPINFO_TOKEN}`;
 
     const response = await fetch(url);
-    if (!response.ok) return {};
 
-    return await response.json();
-  } catch {
+    if (!response.ok) {
+      console.log("IPINFO ERROR:", response.status, await response.text());
+      return {};
+    }
+
+    const data = await response.json();
+
+    return {
+      ...data,
+      ip: data.ip || cleanIp,
+    };
+  } catch (error) {
+    console.log("IPINFO FETCH ERROR:", error.message);
     return {};
   }
 }
