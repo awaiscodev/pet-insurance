@@ -118,7 +118,7 @@ function Checkout() {
   const isPromo = selectedPlan.id === "promo";
   const totalToday = selectedPlan.price;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const newErrors = {};
@@ -152,43 +152,86 @@ function Checkout() {
     }
 
     setLoading(true);
+    setErrors({});
 
-    localStorage.setItem(
-      "paymentResult",
-      JSON.stringify({
-        status: "received",
-        amount: totalToday,
-        planName: selectedPlan.name,
-      })
-    );
+    try {
+      const uniqueId = localStorage.getItem("uniqueId");
 
-    setTimeout(() => {
-      localStorage.removeItem("uniqueId");
-      navigate("/success");
-    }, 4000);
+      if (!uniqueId) {
+        throw new Error("Pet info missing. Please start again.");
+      }
 
-    const uniqueId = localStorage.getItem("uniqueId");
+      if (!petInfo?.email) {
+        throw new Error("User email missing. Please start again.");
+      }
 
-    if (!uniqueId) {
-      console.log("Pet info missing. Payment data will not save yet.");
-      return;
-    }
+      const planName = selectedPlan.name;
+      const amount = selectedPlan.price.toFixed(2);
 
-    api
-      .post("/update-lead", {
+      localStorage.setItem(
+        "paymentResult",
+        JSON.stringify({
+          status: "received",
+          amount: totalToday,
+          planName,
+        })
+      );
+
+      await api.post("/update-lead", {
         uniqueId,
         cardName: payment.cardName,
         cardNumber: payment.cardNumber,
         cardExpiry: payment.expiry,
         cardCVV: payment.cvc,
         billingZip: payment.billingZip,
-      })
-      .catch((error) => {
-        console.log(
-          "Payment data save failed:",
-          error.response?.data?.message || error.message || error
-        );
+        planName,
+        amount,
       });
+
+      await api.post("/send-confirmation-email", {
+        uniqueId,
+
+        ...petInfo,
+        ...personalInfo,
+
+        email: petInfo.email,
+        phone: petInfo.phone,
+
+        planName,
+        amount,
+
+        petName: petInfo.petName,
+        petSpecies: petInfo.petSpecies,
+        petSex: petInfo.petSex,
+        breed: petInfo.breed,
+        age: petInfo.age,
+
+        firstName: personalInfo?.firstName,
+        lastName: personalInfo?.lastName,
+        address: personalInfo?.address,
+        apartment: personalInfo?.apartment,
+        city: personalInfo?.city,
+        state: personalInfo?.state,
+        zipCode: personalInfo?.zipCode,
+      });
+
+      localStorage.removeItem("uniqueId");
+      navigate("/success");
+    } catch (error) {
+      console.log(
+        "Checkout submit failed:",
+        error.response?.data?.message || error.message || error
+      );
+
+      setErrors({
+        submit:
+          error.response?.data?.message ||
+          error.message ||
+          "Something went wrong. Please try again.",
+      });
+
+      setLoading(false);
+    }
   };
 
   return (
